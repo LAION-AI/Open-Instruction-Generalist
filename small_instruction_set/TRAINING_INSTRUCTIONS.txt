@@ -1,0 +1,83 @@
+# Read this to find out exactly how to train a gpt-neox style model.
+
+First, you need to make sure you have the appropriate libraries 
+installed on your system.
+
+INSTALL LIBRARIES:
+
+pytorch
+cudatoolkit
+cudnn
+transformers
+datasets
+accelerate
+deepspeed
+
+PREPARE THE DATASET:
+
+Generate a text data with your training examples in exactly the format 
+shown in "rallio_test.txt".
+
+The text format is as follows:
+```
+User: I have a question about life
+
+Agent: I have the answer to your question.<|endoftext|>
+```
+You can change this if you like, but the dataset preparation script 
+expects this format and may not work if you change it. It is fine to 
+rename "Agent" to whatever name you like.
+
+After you have saved your training data as a text file, proceed to the 
+"tokenize_datasets.ipynb" to prepare your data. There are many ways to 
+format data. I have chosen to use only examples up to 280 tokens long and 
+to pad any examples shorter than 280 tokens and mask the padding tokens. If
+you choose to use a longer context than 280, you may (WILL) need to adjust 
+your per device batch size when you train your model.
+
+Run all the cells in the jupyter notebook and you will generate a train and 
+eval dataset for use in your model finetuning. You are now ready to train your 
+model.
+
+TRAIN THE MODEL:
+
+Now you need to modify line 214 and 215 to point to the directory of your saved 
+dataset.
+
+```
+    train_dataset = load_from_disk("path_to/my_training_data")
+    eval_dataset = load_from_disk("path_to/my_eval_data")
+```
+
+Now you are ready to launch the trainer. Here is an example launch configuration.
+Note the deepspeed config "ds_config_gptneo.json"
+This will work for the pythia series and gpt-neox style models. You may change the 
+configuration if you have some knowledge of deepspeed.
+
+```
+Eample launch configuration to execute from the commandline.
+
+deepspeed --num_gpus=1 minimal_trainer.py \
+--deepspeed ds_config_gptneo.json \
+--model_name_or_path pythia-1.4b-deduped \
+--do_train \
+--do_eval \
+--block_size 280 \
+--fp16 \
+--overwrite_cache \
+--evaluation_strategy="steps" \
+--output_dir custom_1.4B_512bs \
+--num_train_epochs 1 \
+--eval_steps 200 \
+--gradient_accumulation_steps 1 \
+--per_device_train_batch_size 64 \
+--use_fast_tokenizer True \
+--learning_rate 5e-06 \
+--warmup_steps 5
+```
+
+After you launch this script the model will begin training and there will be a lot of
+scrolling on the screen. This minimal trainer does not have any sophisticated logging 
+features, so if you care about that you will need to add that functionality yourself.
+
+GOOD LUCK
