@@ -27,7 +27,7 @@ https://huggingface.co/models?filter=causal-lm
 """
 Eample DS config to execute from the commandline.
 
-deepspeed --num_gpus=1 run_clm_minimal.py \
+deepspeed --num_gpus=1 minimal_trainer.py \
 --deepspeed ds_config_gptneo.json \
 --model_name_or_path pythia-1.4b-deduped \
 --do_train \
