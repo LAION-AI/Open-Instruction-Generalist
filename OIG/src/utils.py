@@ -1,6 +1,7 @@
 #@title Utils
 """
-Copyright 2023, Ontocord, LLC, LAION contributors and the other authors of OIG
+Copyright 2023, LAION contributors, inclduing Ontocord, LLC
+and the other authors of OIG
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
