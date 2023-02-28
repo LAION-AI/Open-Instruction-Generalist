@@ -6,7 +6,7 @@ We will have several versions of the OIG Assistant ranging from an OIG Assistant
 
 We will create ever larger instruction datasets starting with 2M with the goal to generate eventually 1T medium quality instructions. The receipe for training is to do additional pretrain on some subset of the larger instruction sets, followed by a finetune on OIG-small or some other high quality small dataset.
 
-* OIG-small - Done and released. See the sub-directory
-* OIG-2M - Done. See the sub-directory
+* OIG-small - Done and released. See  small_instruction_set sub-directory.
+* OIG-2M - Done. See 2M sub-directory
 * OIG-4M - In progress, to be released soon
 * OIG-20M - In progress, to be released expected March 1, 2023
