@@ -25,16 +25,17 @@ locale.getpreferredencoding = getpreferredencoding
 import random, os
 import spacy
 import json
+from basic_augment import *
 try:
   nlp = spacy.load("en_core_web_sm")
 except:
-  !python -m spacy download en_core_web_sm  
+  os.system("python -m spacy download en_core_web_sm")  
   nlp = spacy.load("en_core_web_sm")
-if not os.path.exists("flanv2_cot.tsv"):
-  !git clone https://github.com/google-research/FLAN
+if not os.path.exists("FLAN"):
+  os.system("git clone https://github.com/google-research/FLAN")
 
 def flanv2_cot(output):
-  for file in glob.glob("/content/FLAN/flan/v2/cot_data/*.tsv"):
+  for file in glob.glob("./FLAN/flan/v2/cot_data/*.tsv"):
     dataset_name = file.split("/")[-1].split(".")[0]
     with open(file, "rb") as in_data:
       for l in in_data:
