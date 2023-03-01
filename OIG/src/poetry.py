@@ -128,7 +128,7 @@ def create_poem_instructions(dataset):
     
     top_authors = get_top_authors(dataset)
     all_prompts = []
-    for item in tqdm(dataset.shuffle().select(range(100))):
+    for item in tqdm(dataset):
         try:
             item["poem name"] = re.sub(r'\r|\n|\[.*\]','',item["poem name"]).strip()
             poem_name, content, author, genre, age = [item[key] for key in ["poem name","content","author","type","age"]]
