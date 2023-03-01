@@ -5,6 +5,9 @@ import numpy as np
 import pronouncing
 import re
 from collections import Counter
+from tqdm import tqdm
+from transformers import pipeline
+
 
 MIN_RHYMES = 3
 PROMPTS = {
@@ -22,13 +25,18 @@ PROMPTS = {
  
  }
 SYNONYMS = {
-        "poem" : ["poem","poetry"]
-        "compose" : ["Write","Help me write", "Compose", "Please craft", "Give me"]
-        "complete" : ["Complete", "Finish", "Put the finishing touches to"]
-        "sentiment" : {"positive":["positive ","happy "],"negative":["negative ","sad "]}
-        "writing" : ["in the manner of {}.","in {}'s writing style.",]
-        "period" : [" written in {}."," written during {} period"]
+        "poem" : ["poem","poetry"],
+        "compose" : ["Write","Help me write", "Compose", "Please craft", "Give me"],
+        "complete" : ["Complete", "Finish", "Put the finishing touches to"],
+        "sentiment" : {"positive":["positive ","happy "],"negative":["negative ","sad "]},
+        "writing" : ["in the manner of {}.","in {}'s writing style.",],
+        "period" : [" written in {} age."," written during {} period"],
         }
+
+nlp = pipeline(task='text-classification', 
+               model='nickwong64/bert-base-uncased-poems-sentiment')
+
+
 
 def get_best_rhymes(content):
     
@@ -44,9 +52,10 @@ def get_best_rhymes(content):
             if len(rhymes_words) > len(best_rhymes):
                 best_rhymes = list(rhymes_words)
                 best_rhymes.insert(0,word)
-    if best_rhymes:            
-        first_word = min([last_words.index(word) for word in best_rhymes])
-    return last_words[first_word],best_rhymes
+        if best_rhymes:            
+            first_word = min([last_words.index(word) for word in best_rhymes])
+        return last_words[first_word],best_rhymes
+    return None,[]
 
 
 def toss_prompt(possible_prompts,prompt_types):
@@ -103,8 +112,8 @@ def build_prompt(possible_prompts,prompt_types,args,sentiment,rhyming_list):
 
 def add_author(prompt,author,top_authors):
     
-    if (author.lower() in top_authors) and (np.random.randint(0,2)):
-        style = np.random.choice(SYNONYMS["writing"]).format(author)
+    if ((author.lower() in top_authors) and (np.random.randint(0,2))):
+        style = np.random.choice(SYNONYMS["writing"]).format(author.lower().capitalize())
         prompt= prompt + " " + style
         
     return prompt
@@ -113,59 +122,67 @@ def get_top_authors(dataset):
     
     counter = Counter([poem["author"] for poem in dataset]).most_common(100)
     authors,_ = zip(*counter)
-    return authors 
+    return [name.lower() for name in authors]
 
 def create_poem_instructions(dataset):
     
     top_authors = get_top_authors(dataset)
     all_prompts = []
-    for item in tqdm(dataset):
-        item["poem name"] = re.sub(r'\r|\n|\[.*\]','',item["poem name"]).strip()
-        poem_name, content, author, genre, age = item.values()
-        prompt_type = np.random.choice(["completion","begining"],p=[0.3,0.7])
-        
-        sentiment = get_emotion(content)
-        rh_word,rh_wordslist = get_best_rhymes(item["content"])
-        item["rhyming"] = rh_word
-        
-        possible_prompts = prompts[prompt_type]
-
-        
-        if prompt_type == "begining":
+    for item in tqdm(dataset.shuffle().select(range(100))):
+        try:
+            item["poem name"] = re.sub(r'\r|\n|\[.*\]','',item["poem name"]).strip()
+            poem_name, content, author, genre, age = [item[key] for key in ["poem name","content","author","type","age"]]
+            prompt_type = np.random.choice(["completion","begining"],p=[0.3,0.7])
             
-            if ((genre!=None) and np.random.randint(0,2)):
+            sentiment = get_emotion(content)
+            rh_word,rh_wordslist = get_best_rhymes(item["content"])
+            item["rhyming"] = rh_word
+            
+            possible_prompts = PROMPTS[prompt_type]
+
+            
+            if prompt_type == "begining":
                 
-                prompt = build_prompt(possible_prompts,["genre_age","default"],item,sentiment,rh_wordslist)
-                
-                if ((item["age"]!="") and (np.random.randint(0,2))):
-                    prompt += np.random.choice(SYNONYMS["period"]).format(item["age"])
+                if ((genre!=None) and np.random.randint(0,5)):
                     
+                    prompt = build_prompt(possible_prompts,["genre_age","default"],item,sentiment,rh_wordslist)
+                    
+                    if ((item["age"]!="") and (np.random.randint(0,5))):
+                        prompt += np.random.choice(SYNONYMS["period"]).format(item["age"])
+                        
 
-            elif poem_name.lower().startswith("the"):
-                prompt = build_prompt(possible_prompts,["about","default"],item,sentiment,rh_wordslist)
-             
-            else:
-                prompt = build_prompt(possible_prompts,["default","default"],item,sentiment,rh_wordslist)
+                elif poem_name.lower().startswith("the"):
+                    prompt = build_prompt(possible_prompts,["about","default"],item,sentiment,rh_wordslist)
                 
-            prompt = add_author(prompt,author,top_authors)
-            response = item["content"].strip()
-            
-        else:
-            prompt = build_prompt(possible_prompts,["completion","completion"],item,sentiment,rh_wordslist)
-            prompt = add_author(prompt,author,top_authors)
-            num_lines = np.random.randint(3,6)
-            poem_lines = item["content"].split("\n")
-            prompt = prompt + "\n" + "\n".join(poem_lines[:num_lines])
-            response = "\n".join(poem_lines[num_lines:]).strip()
-            
-        all_prompts.append({"prompt":prompt,"response":response})
-        
+                else:
+                    prompt = build_prompt(possible_prompts,["default","default"],item,sentiment,rh_wordslist)
+                    
+                prompt = add_author(prompt,author,top_authors)
+                response = item["content"].strip()
+                
+            else:
+                prompt = build_prompt(possible_prompts,["completion","completion"],item,sentiment,rh_wordslist)
+                prompt = add_author(prompt,author,top_authors)
+                num_lines = np.random.randint(3,6)
+                poem_lines = item["content"].split("\n")
+                prompt = prompt + "\n" + "\n".join(poem_lines[:num_lines])
+                response = "\n".join(poem_lines[num_lines:]).strip()
+                
+            all_prompts.append({"prompt":prompt,"response":response})
+        except Exception as e:
+            print(e)    
     return all_prompts
+
+def write_output(output):
+
+    with open("output.json","w") as file:
+        json.dump(output,file,indent=4)
 
 
 def main():
 
     prompts = []
+    hf_datasets = ["merve/poetry","shahules786/PoetryFoundationData"]
     for dataset_name in hf_datasets:
         dataset = load_dataset(dataset_name,split="train")
         prompts.extend(create_poem_instructions(dataset))
@@ -173,7 +190,8 @@ def main():
     
 if __name__ == "__main__":
 
-    main()
+    output = main()
+    write_output(output)
 
 
 
