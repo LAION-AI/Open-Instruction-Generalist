@@ -17,7 +17,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. 
 """
-import glob, random, os
+import glob, random, os, json
 def kojma_cot(output):
   if not os.path.exists("./zero_shot_cot"):
     os.system("git clone https://github.com/kojima-takeshi188/zero_shot_cot")
