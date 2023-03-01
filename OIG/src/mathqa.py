@@ -19,15 +19,15 @@ under the License.
 """
 
 from tqdm.contrib import tzip
-import random
+import random, os
 try:
   from datasets import load_dataset
 except:
-  !pip install datasets
+  os.system("pip install datasets")
 from datasets import load_dataset  
 import json
 
-def math_qa(otuput):
+def math_qa(output):
   dataset = load_dataset("math_qa")
 
   qs = dataset['train']['Problem']
