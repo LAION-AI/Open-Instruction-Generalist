@@ -76,7 +76,7 @@ def math_qa(otuput):
         a = a.strip()
         if "\n" in a:
           if random.randint(0,1) == 0:
-            pr = f"User: {q}. "+random.choice(["And explain please.", "Let's think step by step.", "Can you show me your work?", "Help me solve this step by step."])+"\nAssistant: {a}".replace("..", ".").replace("?.", "?").replace(" i ", " I ")
+            pr = f"User: {q}. "+random.choice(["And explain please.", "Let's think step by step.", "Can you show me your work?", "Help me solve this step by step."])+f"\nAssistant: {a}".replace("..", ".").replace("?.", "?").replace(" i ", " I ")
             output.write (json.dumps({"text":pr, "metadata": {"source": "mathqa"}})+"\n")
           else:
             a2 = a.split("\n")
