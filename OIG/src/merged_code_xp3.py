@@ -19,7 +19,9 @@ under the License.
 """
 
 import os
-import json
+import json, random
+
+from torch import e
 def create_merged_code_xp3(output):
   if not os.path.exists("merged_code.jsonl"):
     os.system("wget https://huggingface.co/datasets/bigscience/xP3/resolve/main/code/merged_code.jsonl")
@@ -93,19 +95,21 @@ def create_merged_code_xp3(output):
           prefix = prefix.split("?")[0]
           prefix = "#"+prefix.split(".")[0]+".\n"
         if len(targets) <= 20: continue
-        if random.randint(0,1) and prefix:
-           command = random.choice(["\n"," ", " ... ", "\n=====\n"])+prefix.replace("Here is", random.choice(["Write me a", "Give me a", "What is a", "Can you provide a"])).strip(".")+"?"
-           text= (f"User: {inputs}{command}\nAssistant: {prefix}{targets}")
-        elif random.randint(0,1) and prefix:
-           command = prefix.replace("Here is", random.choice(["Write me a", "Give me a", "What is a", "Can you provide a"])).strip(".")+" given the following:\n"
-           text= (f"User: {command}{inputs}\nAssistant: {prefix}{targets}")
+        if not inputs.startswith("Complete this python program") and not inputs.startswith("Solve the following python programming"):
+          if random.randint(0,1) and prefix:
+            command = random.choice(["\n"," ", " ... ", "\n=====\n"])+prefix.replace("Here is", random.choice(["Write me a", "Give me a", "What is a", "Can you provide a"])).strip("\n .")+"?"
+            command = command.replace("#", "")
+            text= (f"User: {inputs}{command}\nAssistant: {prefix}{targets}")
+          elif random.randint(0,1) and prefix:
+            command = prefix.replace("Here is", random.choice(["Write me a", "Give me a", "What is a", "Can you provide a"])).strip(".\n ")+" given the following:\n"
+            command = command.replace("#", "")
+            text= (f"User: {command}{inputs}\nAssistant: {prefix}{targets}")
+          else:
+            text= (f"User: {inputs}\nAssistant: {prefix}{targets}")  
         else:
-           text= (f"User: {inputs}\nAssistant: {prefix}{targets}")  
+          text= (f"User: {inputs}\nAssistant: {prefix}{targets}")  
         text = text.replace("\n\n\n", "\n\n")
         if random.randint(0,1):
           text = text.replace("Python code", "Python program")
         output.write(json.dumps({'text':text, "metadata": {'source': 'merged_code_xp3'}})+"\n")
 
-with open("merged_code_xp3.jsonl", "w") as output:
-  create_merged_code_xp3(output)
-os.system("cp merged_code_xp3.jsonl /content/drive/Shareddrives/LAION/OIG")
