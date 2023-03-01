@@ -35,7 +35,15 @@ def create_cuad(output):
       sec = str(sec0)+". "
       next_sec = str(sec0+1)+". "
       next_next_sec = str(sec0+2)+". "
+      sec0_only = [idx for idx, item in enumerate(context_arr) if item.startswith(sec)]
       sec_idx = [idx for idx, item in enumerate(context_arr) if item.startswith(sec) or item.startswith(next_sec) or item.startswith(next_next_sec)]
+      if random.randint(0,1):
+         dialog = "User: "+random.choice(["Complete the next paragraph of this contract:", "Give me more for this agreement:", "Provide a continuation for this:", "What comes next for this:"])+": "+"\n".join(context_arr[0:min(len(context_arr),5)]) +"\nAssistant: "+"\n".join(context_arr[5:min(len(context_arr),10)])
+          dialog_all += "\n"+(dialog)
+      elif sec0_only:
+         rng = sec0_idx[0]
+         dialog = "User: "+random.choice([f"Complete Section {sec} for this contract:", f"Give me sec. {sec} for this agreement:", f"Provide a continuation for this starting with section {sec}:", f"What is sec{sec} for this:"])+": "+"\n".join(context_arr[0:min(len(context_arr),10)]) +"\nAssistant: "+"\n".join(context_arr[rng+5:min(len(context_arr),rng+10)])
+         dialog_all += "\n"+(dialog)
       if len(sec_idx) == 3:
         context0 = "\n".join(context_arr[:min(len(context_arr), sec_idx[1])])
         dialog_all += "\n"+(create_ul2_plus_instructions(context0))
