@@ -19,9 +19,9 @@ under the License.
 """
 import glob, random, os
 def kojma_cot(output):
-  if not os.path.exists("/content/zero_shot_cot"):
-    !git clone https://github.com/kojima-takeshi188/zero_shot_cot
-  for file in glob.glob("/content/zero_shot_cot/log/*_cot.log"):
+  if not os.path.exists("./zero_shot_cot"):
+    os.system("git clone https://github.com/kojima-takeshi188/zero_shot_cot")
+  for file in glob.glob("./zero_shot_cot/log/*_cot.log"):
     with open(file) as input:
       prev_q = ""
       q = ""
