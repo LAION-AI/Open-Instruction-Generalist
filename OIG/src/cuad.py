@@ -21,8 +21,8 @@ under the License.
 import json, os
 def create_cuad(output):
   if not os.path.exists("CUADv1.json"):
-    !wget https://github.com/TheAtticusProject/cuad/raw/main/data.zip
-    !unzip data.zip
+    os.system("wget https://github.com/TheAtticusProject/cuad/raw/main/data.zip")
+    os.system("unzip data.zip")
   cuad = json.load(open("CUADv1.json"))
   #cuad['data'][0]['title'], 
   for cuad0 in cuad['data']:
@@ -53,7 +53,10 @@ def create_cuad(output):
       else:
         i = 0
       for rng in range(i, len(context_arr), 10):
-        dialog = "User: "+random.choice(["More from this contract.", "Next lines please.", "Continue.", "More."])+"\nAssistant: "+"\n".join(context_arr[rng:min(len(context_arr),rng+10)])
+        if dialog_all == "":
+          dialog = "User: "+random.choice(["Complete the next paragraph of this contract:", "Give me more for this agreement:", "Provide a continuation for this:", "What comes next for this:"])+": "+"\n".join(context_arr[rng:min(len(context_arr),rng+5)]) +"\nAssistant: "+"\n".join(context_arr[rng+5:min(len(context_arr),rng+10)])
+        else:
+          dialog = "User: "+random.choice(["More from this contract.", "Next lines please.", "Continue.", "More."])+"\nAssistant: "+"\n".join(context_arr[rng:min(len(context_arr),rng+10)])
         dialog_all += "\n"+(dialog)
 
       for qa in para['qas']:
@@ -86,4 +89,4 @@ def create_cuad(output):
         output.write(json.dumps({"text": dialog_all, "metadata": {"source": "cuad"}})+"\n")
 with open("cuad.jsonl", "w") as output:
   create_cuad(output)
-!cp cuad.jsonl /content/drive/Shareddrives/LAION/OIG
+os.system("cp cuad.jsonl /content/drive/Shareddrives/LAION/OIG")
