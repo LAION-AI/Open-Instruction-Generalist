@@ -22,12 +22,12 @@ def kojma_cot(output):
   if not os.path.exists("./zero_shot_cot"):
     os.system("git clone https://github.com/kojima-takeshi188/zero_shot_cot")
   for file in glob.glob("./zero_shot_cot/log/*_cot.log"):
-    with open(file) as input:
+    with open(file, "rb") as input:
       prev_q = ""
       q = ""
       a = ""
       for l in input:
-        l = l.strip()
+        l = l.decode().strip()
         if l.startswith("pred_before"):
           q = q.strip()
           if prev_q and q[:10] == prev_q[:10]:
