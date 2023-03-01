@@ -20,19 +20,21 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. 
 """
+import os
 try:
   import datasets, transformers
 except:
+  import os
   import nltk
   nltk.download('punkt')
-  !pip install datasets  transformers bitsandbytes accelerate torch sentencepiece
-  !pip install spacy==2.1.8
-  !pip install scispacy==0.2.3
-  !pip install blackstone==0.1
-  !pip install https://blackstone-model.s3-eu-west-1.amazonaws.com/en_blackstone_proto-0.0.1.tar.gz
-  !pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_ner_craft_md-0.2.0.tar.gz
-  !python -m spacy download en_core_web_sm
-
+  os.system("pip install datasets  transformers bitsandbytes accelerate sentencepiece")
+  os.system("pip install spacy==2.1.8")
+  os.system("pip install scispacy==0.2.3")
+  os.system("pip install blackstone==0.1")
+  os.system("pip install https://blackstone-model.s3-eu-west-1.amazonaws.com/en_blackstone_proto-0.0.1.tar.gz")
+  os.system("pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_ner_craft_md-0.2.0.tar.gz")
+  os.system("python -m spacy download en_core_web_sm")
+  
 #RESTART THE RUNTIME
 
 from transformers import AutoTokenizer, OPTForCausalLM,  AutoModelForCausalLM, AutoModel, T5Tokenizer, T5PreTrainedModel
@@ -806,23 +808,6 @@ device_map_T5_13B = {
 }
 
 
-# Load the model in bfloat16. Make sure to use bfloat16
-# if you are doing inference with 16bit precision.
-try:
-  if tokenizer is not None:
-    pass
-except:
-  tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-large")
-  model = AutoModelForSeq2SeqLM.from_pretrained(
-    "google/flan-t5-large",
-    device_map=device_map_T5_13B,
-    torch_dtype=torch.bfloat16,
-    load_in_8bit=False,
-)
-  
-  minilm_tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-  minilm_model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2').half().eval().cuda()  
-
 
 
 # Sort_Tuple sorts a list of tuples
@@ -1099,7 +1084,26 @@ def mean_pooling(model_output, attention_mask):
 
 from torch.nn.functional import cosine_similarity
 
+tokenizer, model, minilm_tokenizer, minilm_model =  None, None, None, None
+
 def gen_qg_qa(paragraphs):
+  global tokenizer, model, minilm_tokenizer, minilm_model
+  # Load the model in bfloat16. Make sure to use bfloat16
+  # if you are doing inference with 16bit precision.
+  try:
+    if tokenizer is  None: assert False
+      
+  except:
+    tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-large")
+    model = AutoModelForSeq2SeqLM.from_pretrained(
+      "google/flan-t5-large",
+      device_map=device_map_T5_13B,
+      torch_dtype=torch.bfloat16,
+      load_in_8bit=False,
+  )
+    
+    minilm_tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+    minilm_model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2').half().eval().cuda()  
 
   # Load strings as knowledge sources for QA generation.
   # You can do this with a pickle.
