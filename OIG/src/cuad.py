@@ -18,7 +18,8 @@ specific language governing permissions and limitations
 under the License. 
 """
 
-import json, os
+import json, os, random
+from ul2_oscar import *
 def create_cuad(output):
   if not os.path.exists("CUADv1.json"):
     os.system("wget https://github.com/TheAtticusProject/cuad/raw/main/data.zip")
@@ -29,7 +30,7 @@ def create_cuad(output):
     dialog_all = ""
     for para in cuad0['paragraphs']:
       context = para['context'].replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("\n\n", "\n").replace("\n\n", "\n").replace("\n\n", "\n")
-      context = "\n".join(a for a in context.split("\n") if "Page -" not in a).replace("[***]", "___")
+      context = "\n".join(a for a in context.split("\n") if not a.startswith("Exhibit") and not a.startswith("EXHIBIT") and "Page -" not in a).replace("[***]", "___")
       context_arr = context.split("\n")
       sec0 = random.randint(1,4)
       sec = str(sec0)+". "
@@ -38,11 +39,14 @@ def create_cuad(output):
       sec0_only = [idx for idx, item in enumerate(context_arr) if item.startswith(sec)]
       sec_idx = [idx for idx, item in enumerate(context_arr) if item.startswith(sec) or item.startswith(next_sec) or item.startswith(next_next_sec)]
       if random.randint(0,1):
-         dialog = "User: "+random.choice(["Complete the next paragraph of this contract:", "Give me more for this agreement:", "Provide a continuation for this:", "What comes next for this:"])+": "+"\n".join(context_arr[0:min(len(context_arr),5)]) +"\nAssistant: "+"\n".join(context_arr[5:min(len(context_arr),10)])
-          dialog_all += "\n"+(dialog)
+         dialog = "User: "+random.choice(["Complete the next paragraph of this contract:", "Give me more for this agreement:", "Provide a continuation for this:", "What comes next for this:"])+" "+"\n".join(context_arr[0:min(len(context_arr),5)]) +"\nAssistant: "+"\n".join(context_arr[5:min(len(context_arr),10)])
+         dialog_all += "\n"+(dialog)
       elif sec0_only:
-         rng = sec0_idx[0]
-         dialog = "User: "+random.choice([f"Complete Section {sec} for this contract:", f"Give me sec. {sec} for this agreement:", f"Provide a continuation for this starting with section {sec}:", f"What is sec{sec} for this:"])+": "+"\n".join(context_arr[0:min(len(context_arr),10)]) +"\nAssistant: "+"\n".join(context_arr[rng+5:min(len(context_arr),rng+10)])
+         rng = sec0_only[0]
+         line = context_arr[rng]
+         if len(line) > 30:
+           line = line[:30]+" ... "
+         dialog = "User: "+random.choice([f"Complete 'Section {line}' for this contract:", f"Give me 'Section {line}' for this agreement:", f"Provide a continuation starting with 'section {line}', given this agreement:", f"What is 'sec {line}' for this:"])+" "+"\n".join(context_arr[0:min(len(context_arr),10)]) +f"\nAssistant: {sec}"+"\n".join(context_arr[rng+5:min(len(context_arr),rng+10)])
          dialog_all += "\n"+(dialog)
       if len(sec_idx) == 3:
         context0 = "\n".join(context_arr[:min(len(context_arr), sec_idx[1])])
@@ -62,7 +66,7 @@ def create_cuad(output):
         i = 0
       for rng in range(i, len(context_arr), 10):
         if dialog_all == "":
-          dialog = "User: "+random.choice(["Complete the next paragraph of this contract:", "Give me more for this agreement:", "Provide a continuation for this:", "What comes next for this:"])+": "+"\n".join(context_arr[rng:min(len(context_arr),rng+5)]) +"\nAssistant: "+"\n".join(context_arr[rng+5:min(len(context_arr),rng+10)])
+          dialog = "User: "+random.choice(["Complete the next paragraph of this contract:", "Give me more for this agreement:", "Provide a continuation for this:", "What comes next for this:"])+" "+"\n".join(context_arr[rng:min(len(context_arr),rng+5)]) +"\nAssistant: "+"\n".join(context_arr[rng+5:min(len(context_arr),rng+10)])
         else:
           dialog = "User: "+random.choice(["More from this contract.", "Next lines please.", "Continue.", "More."])+"\nAssistant: "+"\n".join(context_arr[rng:min(len(context_arr),rng+10)])
         dialog_all += "\n"+(dialog)
@@ -95,6 +99,3 @@ def create_cuad(output):
       dialog_all = dialog_all.replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("  ", " ").replace("\n\n", "\n").replace("\n\n", "\n").replace("\n\n", "\n").replace("\n\n", "\n").replace("\n\n", "\n").replace("___ ___", "___").replace("___ ___", "___").replace("___ ___", "___")
       if dialog_all:
         output.write(json.dumps({"text": dialog_all, "metadata": {"source": "cuad"}})+"\n")
-with open("cuad.jsonl", "w") as output:
-  create_cuad(output)
-os.system("cp cuad.jsonl /content/drive/Shareddrives/LAION/OIG")
