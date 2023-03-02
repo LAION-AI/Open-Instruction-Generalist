@@ -335,7 +335,7 @@ styles = {'NA':'narrative',
  'LY':'lyrical',
  'SP':'spoken',}
 
-text_type = {'NA':'article',
+text_type = {'NA':'history',
  'IN': 'description',
  'OP':'opinion',
  'ID':'interview',
