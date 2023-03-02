@@ -4,7 +4,7 @@ Open Instruction Generalist (OIG) Assistant is an assistant that is part of the 
 
 We will have several versions of the OIG Assistant ranging from an OIG Assistant that is trained on a small (less than 1M) high quality synthetic dataset, to an OIG Aisstant trained on medium quality but massive synthetic instructions. The research goal of OIG Assistant is to create high performing bots by using simple finetuning instead of RLHF.
 
-We will create ever larger instruction datasets starting with 2M with the goal to generate eventually 1T medium quality instructions. The receipe for training is to do additional pretrain on some subset of the larger instruction sets, followed by a finetune on OIG-small or some other high quality small dataset.
+We will create ever larger instruction datasets starting with 2M with the goal to generate eventually 1T medium quality tokens of instructions. The receipe for training is to do additional pretrain on some subset of the larger instruction sets, followed by a finetune on OIG-small or some other high quality small dataset.
 
 * OIG-small - Done and released. See  small_instruction_set sub-directory.
 * OIG-2M - Done. See 2M sub-directory
