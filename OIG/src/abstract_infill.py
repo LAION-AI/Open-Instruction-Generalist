@@ -202,19 +202,19 @@ def output_data(entity, instructions, context, output, min_ner_len=5, length_for
     ner = [a for a in ner_rel[0] if a not in entity and a not in first_sent]
     if len(ner) > 2:
       ner = ner[:2]
-    context_instruction = (f"User: Write me an article about "+ ", ".join(first_sent) + ", discussing in detail " + ", ".join(ner)+ style + ".")
+    context_instruction = (f"<human>: Write me an article about "+ ", ".join(first_sent) + ", discussing in detail " + ", ".join(ner)+ style + ".")
   elif first_sent:
-    context_instruction = (f"User: Write me an article about "+ ", ".join(first_sent) + style + ".")
+    context_instruction = (f"<human>: Write me an article about "+ ", ".join(first_sent) + style + ".")
   elif ner_rel:
     ner = [a for a in ner_rel[0] if a not in entity]
     if len(ner) > 2:
       ner = ner[:2]    
-    context_instruction = (f"User: Write me an article about "+ ", ".join(ner)+ style + ".") 
+    context_instruction = (f"<human>: Write me an article about "+ ", ".join(ner)+ style + ".") 
   else:
     ner = [a for a in ner_rel[0] if a not in entity]
     if len(ner) > 2:
       ner = ner[:2]    
-    context_instruction = (f"User: Write me an article about {entity}"+ style + ".") 
+    context_instruction = (f"<human>: Write me an article about {entity}"+ style + ".") 
   
 
   last_sent = basic_nlp(context_arr[-2])
@@ -228,21 +228,21 @@ def output_data(entity, instructions, context, output, min_ner_len=5, length_for
   instructions = instructions.strip()
   format_type = random.randint(0,3)
   if format_type == 0:
-    out = (context_instruction + "\n" + "Assistant: " + context+ "\n"+ instructions) 
+    out = (context_instruction + "\n" + "<bot>: " + context+ "\n"+ instructions) 
     out = out.replace("Write me an article about", random.choice(["Write me an article about", "Provide an article about", "Give me an article about"]))
   elif format_type == 1:
     first_instruction =  instructions.split("\n")[0].split(": ",1)[1].strip()
     if first_instruction[1:].lower() == first_instruction[1:]:
       ner_rel_text =  "; ".join(str(a) for a in ner_rel[-1]) if ner_rel[-1] else ('' if not ner_rel[0] else "; ".join(str(a) for a in ner_rel[0].items()) )
       if not ner_rel_text: return
-      instructions = "User: " + first_instruction + "\n\n" + "Assistant: I'm sorry I can't answer that question based on the information I have.\n\n" + \
-        "User: Answer the question assuming the following : " + ner_rel_text+ ".\n\n" + instructions.split("\n\n",1)[-1]
-    out = (instructions+"\n"+context_instruction + "\n" + "Assistant: " + context) 
+      instructions = "<human>: " + first_instruction + "\n\n" + "<bot>: I'm sorry I can't answer that question based on the information I have.\n\n" + \
+        "<human>: Answer the question assuming the following : " + ner_rel_text+ ".\n\n" + instructions.split("\n\n",1)[-1]
+    out = (instructions+"\n"+context_instruction + "\n" + "<bot>: " + context) 
     out = out.replace("Write me an article about", random.choice(["Based on the above, write me an article about", "Using the above, provide an article about", "Summarizing the above, give me an article about"]))
   else:
     if entity.replace("_", " ") not in instructions.split("\n")[0] and entity.replace("_", " ").lower() not in instructions.split("\n")[0]:
-      instructions = "User: " +  random.choice(["Tell me about", "Provide one sentence about", "Briefly describe"]) + " " + entity.replace("_", " ") +".\n\n"+ \
-        "Assistant: "+ context_arr[0] + ".\n\n" + instructions
+      instructions = "<human>: " +  random.choice(["Tell me about", "Provide one sentence about", "Briefly describe"]) + " " + entity.replace("_", " ") +".\n\n"+ \
+        "<bot>: "+ context_arr[0] + ".\n\n" + instructions
     out = ("Background: " + context+ "\n"+ instructions) 
   out = out.replace("\n\n", "\n").replace("()", "").replace("  ", " ")
   #print ("###")
@@ -337,7 +337,7 @@ def abstract_infil2(output):
       data['metadata'] = data['meta']
       del data['meta']
       text = data['text']
-      text_arr = text.split("User:")
+      text_arr = text.split("<human>:")
       b = ([a for a in text_arr if "('" in a])
       if b:
         print (b)
