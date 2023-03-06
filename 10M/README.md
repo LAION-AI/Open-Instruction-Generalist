@@ -1,3 +1,0 @@
-## WIP
-Data description to come...
-See https://huggingface.co/datasets/laion/OIG-10M
