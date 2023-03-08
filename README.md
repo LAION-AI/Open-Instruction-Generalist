@@ -9,3 +9,10 @@ We will create ever larger instruction datasets with the goal to generate eventu
 * OIG-small-chip2 (200K) - Done and released. See  small_instruction_set sub-directory.
 * OIG-40M - Done - documentation still needed. See 40M sub-directory
 * OIG-100M - In progress, to be released expected March 30, 2023
+
+# OIG-Moderation
+
+We have also created a small subset of safety data to tag instructions for moderation. This dataset was created by LAION's team of safety volunteers and also curated and augmented from public datasets (see https://huggingface.co/datasets/laion/OIG-moderation)
+
+* OIG_safety_v0.1.jsonl (66K)
+* OIG_safety_v0.2.jsonl (134K)
