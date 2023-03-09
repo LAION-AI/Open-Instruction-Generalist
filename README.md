@@ -12,7 +12,7 @@ We will create ever larger instruction datasets with the goal to generate eventu
 
 # OIG-Moderation
 
-We have also created a small subset of safety data to tag instructions for moderation. This dataset was created by LAION's team of safety volunteers and also curated and augmented from public datasets (see https://huggingface.co/datasets/ontocord/OIG-moderation)
+We have also created a small subset of safety data to tag instructions for moderation. This dataset was created by volunteers and also curated and augmented from public datasets (see https://huggingface.co/datasets/ontocord/OIG-moderation)
 
 * OIG_safety_v0.1.jsonl (66K)
 * OIG_safety_v0.2.jsonl (134K)
