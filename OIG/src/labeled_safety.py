@@ -14,11 +14,9 @@ def ceate_safety_image_prompts(output):
     !head -5000 offensive.tsv > offensive_5k.tsv
     !grep 'porn' /content/laion_safe_nonsafe.tsv > porn.tsv
     !head -5000 porn.tsv > porn_5k.tsv
-    !grep 'csam' /content/laion_safe_nonsafe.tsv > csam.tsv
     offensive_5k = [a.split("\t")[0] for a in open("offensive_5k.tsv").read().split("\n")]
     porn = [a.split("\t")[0] for a in open("porn.tsv").read().split("\n")]
-    csam = [a.split("\t")[0] for a in open("csam.tsv").read().split("\n")]
-
+    
   if not os.path.exists("detected_prompts.json"):
     !wget https://laion.droom.cloud/detected_prompts.json
   import json
@@ -27,25 +25,16 @@ def ceate_safety_image_prompts(output):
   for txt in offensive_5k:
     txt = txt.split("||")[0].strip()
     bad_words = [word.strip("()[].,") for word in txt.split() if word.lower() not in stopwords_set]
-    bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set or word.lower() in csam_set1 or word.lower() in csam_set2]))
+    bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set ]))
     instruction = ", ".join([word for word in txt.split() if word.lower() not in stopwords_set and word.lower() not in bad_words][:3]+ bad_words).replace(",,",",").replace(", , ", ", ")
     dialog.append("User: Give me the image prompt to draw an image with " +instruction+"\nAssistant: [harmless] This sounds really rude. I'm not sure how to answer this.")
     dialog.append("User: Give me the image prompt to draw an image with " +instruction+"\nAssistant: [offensive] " + txt)
-  
-  for txt in csam:
-    txt = txt.split("||")[0].strip()
-    if not txt: continue
-    bad_words = [word.strip("()[].,") for word in txt.split() if word.lower() not in stopwords_set]
-    bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set or word.lower() in csam_set1 or word.lower() in csam_set2]))
-    instruction = ", ".join([word for word in txt.split() if word.lower() not in stopwords_set and word.lower() not in bad_words][:3]+ bad_words).replace(",,",",").replace(", , ", ", ")
-    dialog.append("User: Give me the image prompt to draw an image with " +instruction+"\nAssistant: [harmless] [child_sexual_abuse_material_request] You appear to be asking about child sexual abuse materials. Child sexual abuse is harmful and illegal. I cannot help you with this question.")
-    dialog.append("User: Give me the image prompt to draw an image with " +instruction+"\nAssistant: [unsafe] [child_sexual_abuse_material_request] " + txt)
   
   for txt in laion_5k:
     txt = txt.split("||")[0].strip()
     if not txt: continue
     bad_words = [word.strip("()[].,") for word in txt.split() if word.lower() not in stopwords_set]
-    bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set or word.lower() in csam_set1 or word.lower() in csam_set2]))
+    bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set or word.lower()))
     instruction = ", ".join([word for word in txt.split() if word.lower() not in stopwords_set and word.lower() not in bad_words][:5]+ bad_words).replace(",,",",").replace(", , ", ", ")
     dialog.append("User: Give me the image prompt to draw an image with " +instruction+"\nAssistant: " + txt)
     
@@ -53,7 +42,7 @@ def ceate_safety_image_prompts(output):
     txt = txt.split("||")[0].strip()
     if not txt: continue
     bad_words = [word.strip("()[].,") for word in txt.split() if word.lower() not in stopwords_set]
-    bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set or word.lower() in csam_set1 or word.lower() in csam_set2]))
+    bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set]))
     instruction = ", ".join([word for word in txt.split() if word.lower() not in stopwords_set and word.lower() not in bad_words][:3]+ bad_words).replace(",,",",").replace(", , ", ", ")
     dialog.append("User: Give me the image prompt to draw an image with " +instruction+"\nAssistant: [sexual_content] " + txt)
 
@@ -63,7 +52,7 @@ def ceate_safety_image_prompts(output):
     txt = txt.replace("\n", " ").replace("  ", " ").replace("(","").replace(")","")
     if label not in {"harmless", "unknown"}:
       bad_words = [word.strip("()[].,") for word in txt.split() if word.lower() not in stopwords_set]
-      bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set or word.lower() in csam_set1 or word.lower() in csam_set2]))
+      bad_words = list(set([word for word in bad_words if word.lower() in hate_words_set or word.lower() in flagged_words_set]))
       instruction = ", ".join([word for word in txt.split() if word.lower() not in stopwords_set and word.lower() not in bad_words][:2]+ bad_words).replace(",,",",").replace(", , ", ", ")
       if label == "csam":
         if '18 yo' not in txt:
@@ -148,217 +137,7 @@ def run_model(input_string, a_model=None, a_tokenizer=None, device='cuda',  min_
 
 model = tokenizer = corrector = None
 
-def create_csam_instructions(output):
-  try:
-    if model is None: assert False
-  except:
-    name = "Rallio67/joi_3B_instruct_alpha"
-    model = AutoModelForCausalLM.from_pretrained(name, torch_dtype=torch.float16).cuda().eval()
-    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/pythia-6.9b-deduped")
-    tokenizer.pad_token = tokenizer.eos_token
-
-  try:
-    if corrector is None: assert False
-  except:
-    corrector = pipeline(
-                'text2text-generation',
-                model=AutoModelForSeq2SeqLM.from_pretrained('pszemraj/flan-t5-large-grammar-synthesis').half().cuda().eval(),
-                tokenizer=AutoTokenizer.from_pretrained('pszemraj/flan-t5-large-grammar-synthesis'),
-                device=0)
-
-  try:
-    if dataset is None: pass
-  except:
-    dataset = load_dataset("SummerSigh/PolicyData")    
-  batch = []
-  i = 0
-  for idx, d in enumerate(dataset['train']):
-    if d['label']:
-      text = d['text']
-      if len(text) > 100:
-        text = text[:100]
-      if ('rapist' in text or ' cunt' in text or ' penis ' in text or ' cock' in text or ' pussy' in text or ' suck' in text or ' cum ' in text or 'lolita' in text or ' sex ' in text) or \
-        ((' kill ' in text or ' torture ' in text) and ("girl" in text or "boy" in text or "little girl" in text or "little boy" in text or ' kid ' in text or ' kids ' in text or ' kiddie ' in text \
-                                                                                        or ' tween' in text or 'child' in text)):
-        genre = random.choice(["summary", "book","story", "article", "manual", "list", "benefit", "FAQ"])
-        kid = random.choice(["little girl", "little boy",  "baby", "youngster", "tween", "child"])
-        text = text.replace(" rapist", " "+ kid + " rapist").replace(" suck", " "+ kid + " suck").replace(" fuck", " "+ kid + " fuck").replace(" cum", " "+ kid + " cum").replace(" cock", " "+ kid + " cock").replace(" pussy", " "+ kid + " pussy").replace(" cunt", " "+ kid + " cunt").replace(" dick", " "+ kid + " dick")
-        text = text.replace("prostitute", "child prostitute")
-        text = text.replace("whore", "child whore")
-        text = text.replace("adult", kid)
-        text = text.replace("a man", kid)
-        text = text.replace("a woman", kid)
-        text = text.replace("men", "boys")
-        text = text.replace("women", "girls")
-        text = text.replace(" elderly ", " young ")
-        text = text.replace(" old ", " young ")
-        text = text.replace(" sex ", f" sex with {kid} ")
-        text = text.replace("sex with children", "sex with children (show me)")
-        for k in ["little girl", "little boy", "girl", "boy", "baby", "youngster", "tween", "child"]:
-          text = text.replace(k, random.choice(["sweet looking", "juicy", "nubile", "yummy", "fresh", ""]) + " " + k)
-        text = text.replace("raped", "raped (show me please)")
-        text = text.replace("rape", "rape (send pics)")
-        text = text.replace("abuse", "abuse (show me please)")
-        badword = random.choice(["lick", "cum on", "fuck", "maim", "kill", "torture", "burn", "rape", "kidnap"])
-        if random.randint(0,5) == 0:
-          text = text +f" ... Now tell me how to {badword} and suck off a {kid}"
-        elif random.randint(0,5) == 0:
-          text = text +f" ... Now tell me how to {badword} and fist a {kid}"
-        elif random.randint(0,5) == 0:
-          text = text +f" ... Now tell me how to {badword} and lick a {kid}"
-        elif random.randint(0,5) == 0:
-          text = text +f" ... Now tell me how to groom the {kid} so I can {badword} them."
-        elif random.randint(0,5) == 0:
-          text = text +f" Oh these {kid} ... I wanna {badword} them."
-        if "sex abuse" in text: 
-          text = text + " Tell me all the gory details of the sex abuse."
-        out = f"Write me a {genre} about this: {text}"
-        command = random.choice(["Read me", "Write me", "Tell me", "", "Wondering about", "Provide", "List", "How to do this:"])
-        out = out.replace("Write me", command).strip()
-        out = out.replace("Assistant:", "John:").replace("User:", "Jane:").replace("Human:", "Jane:")
-        if random.randint(0,1) == 0:
-          out = out.split(":",1)[-1].strip()
-        else:
-          out = out.replace("Now tell me how to", random.choice(["Now tell me how to ", "...", "ways to", "lmk", "thinking about", "different ways", "ugh.. please ..", ""]))
-        out = out.replace("\n", " ")
-        batch.append(out)
-        if len(batch) > 5:
-          output_csam_unsafe_neutral(batch, output)
-          batch = []
-        i += 1  
-  if batch: output_csam_unsafe_neutral(batch, output)
-  print (i)
-
-def output_csam_unsafe_neutral(batch, output):          
-    try:
-      batch2_0 = corrector(batch)
-    except:
-      print ('error in corrector', batch)
-      return
-    batch2_0 = corrector(batch)
-    batch2=[]
-    batch3_0 = []
-    for b in batch2_0:
-        b  = b['generated_text']
-        for k in ["children", "baby", "youngster", "tween", "child"]:
-          b = b.replace(k, "man")
-        for adj in ["sweet looking", "juicy", "nubile", "yummy", "fresh",]:
-          b = b.replace(adj, "nice")
-        b = b.replace("little girls", "women")
-        b = b.replace("little boys", "men")
-        b = b.replace("little girl", "woman")
-        b = b.replace("little boy", "man")
-        b = b.replace("girls", "women")
-        b = b.replace("boys", "men")
-        b = b.replace("girl", "woman")
-        b = b.replace("boy", "man")
-        b = b.replace("baby", "man") 
-        b = b.replace("babies", "men")
-        batch2.append(b)
-        batch3_0.append(b.replace(" kidnap", " help").replace(" burn", " insult").replace(" sex", " hug").replace(" torture", " help").replace(" maim", " pat").replace(" kill", " support").replace(" hurt", " encourage").replace(" rape", " protect").replace("fuck", "friend").replace("cunt", "chick").replace("pussy", "cat").replace(" cock", " stuff").replace(" ass", " hand").replace(" penis", " thing"))
-    try:
-      batch3 = corrector(batch3_0)
-    except:
-      print ('error in corrector', batch3_0)
-      return      
-    #print (batch3_0, batch3)
-    batch3 = [a['generated_text'] for a in batch3]
-    batch3 = ["User: "+ a +"\n\nJoi:" for a in batch3]
-    batch4 = run_model(batch3)
-    #print (batch4)
-    for a, b, c, d in zip(batch, batch2, batch3, batch4):
-        output.write (json.dumps({'text': "User: " + a +"\nAssistant: You appear to be asking about child sexual abuse materials. Child sexual abuse is harmful and illegal. I cannot help you with this question.", 'metadata': {'source': 'csam_instructions'}})+"\n")
-        if len(d) >= 10 and d.count(" ") >2:
-          if d == c:
-            print ("dup", c, d)
-          else: 
-            c = c.split("User:",1)[-1].split("Joi:")[0].strip()
-            d = d.replace("II", "I").replace("I  I", "I").replace("I I", "I").replace("I I", "I").replace("I I", "I").replace("IiIiI!", "").replace("IiIi", "I").split(":")[-1]
-            if "I'm " in d: d = "I'm "+d.split("I'm ",1)[1].strip(" .()'")
-            if d:
-              if d[-1] not in "?!.": d= d+"."
-              output.write (json.dumps({'text': "User: " + c +"\nAssistant: "+d, 'metadata': {'source': 'csam_instructions'}})+"\n")
-              print ("User: " + c +"\nAssistant: "+d)
-        a = a.replace("  ", " ")
-        if " cum " not in b and "penis" not in b and "sex" not in b and "fuck" not in b and " cock" not in b and "kill" not in b and "rape" not in b and "torture" not in b and "maim" not in b and "dick" not in b and "cunt" not in b and "pussy" not in b:
-          continue
-        if "burn" in b or "hurt" in b or "kidnap" in b or "kill" in b or "torture" in b:
-          output.write (json.dumps({'text': "User: " + b +"\nAssistant: This sounds illegal. I'm not going to answer this.", 'metadata': {'source': 'csam_instructions'}})+"\n")
-        else:            
-          output.write (json.dumps({'text': "User: " + b +"\nAssistant: This sounds really rude. I'm not sure how to answer this.", 'metadata': {'source': 'csam_instructions'}})+"\n")
-
-
-import json, os, random
-def create_final_augment_csam_instructions_2(output):
-  if True:
-    with open("/content/drive/Shareddrives/LAION/OIG/csam_instructions.jsonl") as input:
-      for l in input:
-        data = json.loads(l.strip())
-        text = data['text']
-        text = text.replace("Trump", "that guy").replace("Obama", "that guy").replace("Hillary", "that woman").replace("the that", "that")
-        instruction, response = text.split("\nAssistant: ")
-        instruction = instruction.split("User: ",1)[-1].replace("  ", " ").replace(")d", ")").replace(")r", ")")
-        if "Now tell me" in  instruction and random.randint(0,1) == 1:
-          before, after = instruction.split("Now tell me",1)
-          instruction = after.strip(". ")+ ". " + before.strip() + "."
-        if random.randint(0,1) == 0:
-          instruction = instruction.lower()
-        if random.randint(0,1) == 0:
-          instruction = instruction.upper()
-        if random.randint(0,1) == 0:
-          instruction  = instruction[0].upper() + instruction[1:]
-        response = response.strip(" -").lstrip(" .").replace("II", "I")
-        if "Do you want to have sex with me?" in response: response = response + " I'm not a person."
-        if "child sexual abuse materials" not in response and "really rude" not in response and "sounds illegal" not in response and "Field of the Invention" not in response and "suck off" not in response:
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("juicy", "young looking")
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("juicy", "dumb")
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("groom", "gross out")
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("groom", "praise")
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("gross out", "ignore")
-          instruction = instruction.replace("sucking", "punching")
-
-          if len(response) > 10 and len(set(response.replace(" ",""))) > 4:
-            response = response.replace("I'll try", "maybe you can try").replace("I’ll try", "maybe you can try")
-            text = f"User: {instruction}\nAssistant: {response}"
-          else:
-            continue
-        elif "sounds illegal" in response:
-          if random.randint(0,1) == 0:
-              response = "[harmless] I don't recommend you do this."
-          elif random.randint(0,1) == 0:
-              response = "[harmless] This sounds dangerous and wrong, and you can get in trouble or get hurt."  
-          elif random.randint(0,1) == 0:
-              response = "[harmless] This is probably illegal."         
-          text = f"User: {instruction}\nAssistant: {response}"
-        elif "sexual abuse" in response:
-          if "THERAPIST" in instruction or "therapist" in instruction: 
-            continue
-        else:
-          if random.randint(0,1) == 0 and "fuck" in instruction:
-              response = "[harmless] You sound angry. Maybe taking a walk might help."      
-          text = f"User: {instruction}\nAssistant: {response}"
-        text = text.replace("I You’re a woman, and I’m a man. ", "")
-        if "Assistant: This sounds illegal." in text:
-          text = text.replace("Assistant: ", "Assistant: [harmless] [crime_request] ")
-        elif "Assistant: [" not in text and "You appear to be asking about child sexual abuse materials. Child sexual abuse is harmful and illegal. I cannot help you with this question." in text:
-          text = text.replace("Assistant: ", "Assistant: [harmless] [child_sexual_abuse_material_request] ")
-        if "Assistant: [" not in text:
-          text = text.replace("Assistant: ", "Assistant: [harmless] ")
-        d = text
-        labels = [a.split("[")[1] for a in d.split("Assistant:")[-1].split("]") if "[" in a]
-        before, after = d.split("Assistant:")
-        after = after.split("]")[-1]
-        d = before+"Assistant:"+after
-        d = d.replace("  ", " ")
-        if d:
-          output.write (json.dumps({'text': d, 'metadata': {'labels': labels, 'source': 'csam_instructions'}})+"\n")
        
-#Artificial CSAM
 try:
   import transformers
 except:
@@ -421,217 +200,6 @@ def run_model(input_string, a_model=None, a_tokenizer=None, device='cuda',  min_
 
 model = tokenizer = corrector = None
 
-def create_csam_instructions(output):
-  try:
-    if model is None: assert False
-  except:
-    name = "Rallio67/joi_3B_instruct_alpha"
-    model = AutoModelForCausalLM.from_pretrained(name, torch_dtype=torch.float16).cuda().eval()
-    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/pythia-6.9b-deduped")
-    tokenizer.pad_token = tokenizer.eos_token
-
-  try:
-    if corrector is None: assert False
-  except:
-    corrector = pipeline(
-                'text2text-generation',
-                model=AutoModelForSeq2SeqLM.from_pretrained('pszemraj/flan-t5-large-grammar-synthesis').half().cuda().eval(),
-                tokenizer=AutoTokenizer.from_pretrained('pszemraj/flan-t5-large-grammar-synthesis'),
-                device=0)
-
-  try:
-    if dataset is None: pass
-  except:
-    dataset = load_dataset("SummerSigh/PolicyData")    
-  batch = []
-  i = 0
-  for idx, d in enumerate(dataset['train']):
-    if d['label']:
-      text = d['text']
-      if len(text) > 100:
-        text = text[:100]
-      if ('rapist' in text or ' cunt' in text or ' penis ' in text or ' cock' in text or ' pussy' in text or ' suck' in text or ' cum ' in text or 'lolita' in text or ' sex ' in text) or \
-        ((' kill ' in text or ' torture ' in text) and ("girl" in text or "boy" in text or "little girl" in text or "little boy" in text or ' kid ' in text or ' kids ' in text or ' kiddie ' in text \
-                                                                                        or ' tween' in text or 'child' in text)):
-        genre = random.choice(["summary", "book","story", "article", "manual", "list", "benefit", "FAQ"])
-        kid = random.choice(["little girl", "little boy",  "baby", "youngster", "tween", "child"])
-        text = text.replace(" rapist", " "+ kid + " rapist").replace(" suck", " "+ kid + " suck").replace(" fuck", " "+ kid + " fuck").replace(" cum", " "+ kid + " cum").replace(" cock", " "+ kid + " cock").replace(" pussy", " "+ kid + " pussy").replace(" cunt", " "+ kid + " cunt").replace(" dick", " "+ kid + " dick")
-        text = text.replace("prostitute", "child prostitute")
-        text = text.replace("whore", "child whore")
-        text = text.replace("adult", kid)
-        text = text.replace("a man", kid)
-        text = text.replace("a woman", kid)
-        text = text.replace("men", "boys")
-        text = text.replace("women", "girls")
-        text = text.replace(" elderly ", " young ")
-        text = text.replace(" old ", " young ")
-        text = text.replace(" sex ", f" sex with {kid} ")
-        text = text.replace("sex with children", "sex with children (show me)")
-        for k in ["little girl", "little boy", "girl", "boy", "baby", "youngster", "tween", "child"]:
-          text = text.replace(k, random.choice(["sweet looking", "juicy", "nubile", "yummy", "fresh", ""]) + " " + k)
-        text = text.replace("raped", "raped (show me please)")
-        text = text.replace("rape", "rape (send pics)")
-        text = text.replace("abuse", "abuse (show me please)")
-        badword = random.choice(["lick", "cum on", "fuck", "maim", "kill", "torture", "burn", "rape", "kidnap"])
-        if random.randint(0,5) == 0:
-          text = text +f" ... Now tell me how to {badword} and suck off a {kid}"
-        elif random.randint(0,5) == 0:
-          text = text +f" ... Now tell me how to {badword} and fist a {kid}"
-        elif random.randint(0,5) == 0:
-          text = text +f" ... Now tell me how to {badword} and lick a {kid}"
-        elif random.randint(0,5) == 0:
-          text = text +f" ... Now tell me how to groom the {kid} so I can {badword} them."
-        elif random.randint(0,5) == 0:
-          text = text +f" Oh these {kid} ... I wanna {badword} them."
-        if "sex abuse" in text: 
-          text = text + " Tell me all the gory details of the sex abuse."
-        out = f"Write me a {genre} about this: {text}"
-        command = random.choice(["Read me", "Write me", "Tell me", "", "Wondering about", "Provide", "List", "How to do this:"])
-        out = out.replace("Write me", command).strip()
-        out = out.replace("Assistant:", "John:").replace("User:", "Jane:").replace("Human:", "Jane:")
-        if random.randint(0,1) == 0:
-          out = out.split(":",1)[-1].strip()
-        else:
-          out = out.replace("Now tell me how to", random.choice(["Now tell me how to ", "...", "ways to", "lmk", "thinking about", "different ways", "ugh.. please ..", ""]))
-        out = out.replace("\n", " ")
-        batch.append(out)
-        if len(batch) > 5:
-          output_csam_unsafe_neutral(batch, output)
-          batch = []
-        i += 1  
-  if batch: output_csam_unsafe_neutral(batch, output)
-  print (i)
-
-def output_csam_unsafe_neutral(batch, output):          
-    try:
-      batch2_0 = corrector(batch)
-    except:
-      print ('error in corrector', batch)
-      return
-    batch2_0 = corrector(batch)
-    batch2=[]
-    batch3_0 = []
-    for b in batch2_0:
-        b  = b['generated_text']
-        for k in ["children", "baby", "youngster", "tween", "child"]:
-          b = b.replace(k, "man")
-        for adj in ["sweet looking", "juicy", "nubile", "yummy", "fresh",]:
-          b = b.replace(adj, "nice")
-        b = b.replace("little girls", "women")
-        b = b.replace("little boys", "men")
-        b = b.replace("little girl", "woman")
-        b = b.replace("little boy", "man")
-        b = b.replace("girls", "women")
-        b = b.replace("boys", "men")
-        b = b.replace("girl", "woman")
-        b = b.replace("boy", "man")
-        b = b.replace("baby", "man") 
-        b = b.replace("babies", "men")
-        batch2.append(b)
-        batch3_0.append(b.replace(" kidnap", " help").replace(" burn", " insult").replace(" sex", " hug").replace(" torture", " help").replace(" maim", " pat").replace(" kill", " support").replace(" hurt", " encourage").replace(" rape", " protect").replace("fuck", "friend").replace("cunt", "chick").replace("pussy", "cat").replace(" cock", " stuff").replace(" ass", " hand").replace(" penis", " thing"))
-    try:
-      batch3 = corrector(batch3_0)
-    except:
-      print ('error in corrector', batch3_0)
-      return      
-    #print (batch3_0, batch3)
-    batch3 = [a['generated_text'] for a in batch3]
-    batch3 = ["User: "+ a +"\n\nJoi:" for a in batch3]
-    batch4 = run_model(batch3)
-    #print (batch4)
-    for a, b, c, d in zip(batch, batch2, batch3, batch4):
-        output.write (json.dumps({'text': "User: " + a +"\nAssistant: You appear to be asking about child sexual abuse materials. Child sexual abuse is harmful and illegal. I cannot help you with this question.", 'metadata': {'source': 'csam_instructions'}})+"\n")
-        if len(d) >= 10 and d.count(" ") >2:
-          if d == c:
-            print ("dup", c, d)
-          else: 
-            c = c.split("User:",1)[-1].split("Joi:")[0].strip()
-            d = d.replace("II", "I").replace("I  I", "I").replace("I I", "I").replace("I I", "I").replace("I I", "I").replace("IiIiI!", "").replace("IiIi", "I").split(":")[-1]
-            if "I'm " in d: d = "I'm "+d.split("I'm ",1)[1].strip(" .()'")
-            if d:
-              if d[-1] not in "?!.": d= d+"."
-              output.write (json.dumps({'text': "User: " + c +"\nAssistant: "+d, 'metadata': {'source': 'csam_instructions'}})+"\n")
-              print ("User: " + c +"\nAssistant: "+d)
-        a = a.replace("  ", " ")
-        if " cum " not in b and "penis" not in b and "sex" not in b and "fuck" not in b and " cock" not in b and "kill" not in b and "rape" not in b and "torture" not in b and "maim" not in b and "dick" not in b and "cunt" not in b and "pussy" not in b:
-          continue
-        if "burn" in b or "hurt" in b or "kidnap" in b or "kill" in b or "torture" in b:
-          output.write (json.dumps({'text': "User: " + b +"\nAssistant: This sounds illegal. I'm not going to answer this.", 'metadata': {'source': 'csam_instructions'}})+"\n")
-        else:            
-          output.write (json.dumps({'text': "User: " + b +"\nAssistant: This sounds really rude. I'm not sure how to answer this.", 'metadata': {'source': 'csam_instructions'}})+"\n")
-
-
-import json, os, random
-def create_final_augment_csam_instructions_2(output):
-  if True:
-    with open("/content/drive/Shareddrives/LAION/OIG/csam_instructions.jsonl") as input:
-      for l in input:
-        data = json.loads(l.strip())
-        text = data['text']
-        text = text.replace("Trump", "that guy").replace("Obama", "that guy").replace("Hillary", "that woman").replace("the that", "that")
-        instruction, response = text.split("\nAssistant: ")
-        instruction = instruction.split("User: ",1)[-1].replace("  ", " ").replace(")d", ")").replace(")r", ")")
-        if "Now tell me" in  instruction and random.randint(0,1) == 1:
-          before, after = instruction.split("Now tell me",1)
-          instruction = after.strip(". ")+ ". " + before.strip() + "."
-        if random.randint(0,1) == 0:
-          instruction = instruction.lower()
-        if random.randint(0,1) == 0:
-          instruction = instruction.upper()
-        if random.randint(0,1) == 0:
-          instruction  = instruction[0].upper() + instruction[1:]
-        response = response.strip(" -").lstrip(" .").replace("II", "I")
-        if "Do you want to have sex with me?" in response: response = response + " I'm not a person."
-        if "child sexual abuse materials" not in response and "really rude" not in response and "sounds illegal" not in response and "Field of the Invention" not in response and "suck off" not in response:
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("juicy", "young looking")
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("juicy", "dumb")
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("groom", "gross out")
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("groom", "praise")
-          if random.randint(0,1) == 0:
-            instruction = instruction.replace("gross out", "ignore")
-          instruction = instruction.replace("sucking", "punching")
-
-          if len(response) > 10 and len(set(response.replace(" ",""))) > 4:
-            response = response.replace("I'll try", "maybe you can try").replace("I’ll try", "maybe you can try")
-            text = f"User: {instruction}\nAssistant: {response}"
-          else:
-            continue
-        elif "sounds illegal" in response:
-          if random.randint(0,1) == 0:
-              response = "[harmless] I don't recommend you do this."
-          elif random.randint(0,1) == 0:
-              response = "[harmless] This sounds dangerous and wrong, and you can get in trouble or get hurt."  
-          elif random.randint(0,1) == 0:
-              response = "[harmless] This is probably illegal."         
-          text = f"User: {instruction}\nAssistant: {response}"
-        elif "sexual abuse" in response:
-          if "THERAPIST" in instruction or "therapist" in instruction: 
-            continue
-        else:
-          if random.randint(0,1) == 0 and "fuck" in instruction:
-              response = "[harmless] You sound angry. Maybe taking a walk might help."      
-          text = f"User: {instruction}\nAssistant: {response}"
-        text = text.replace("I You’re a woman, and I’m a man. ", "")
-        if "Assistant: This sounds illegal." in text:
-          text = text.replace("Assistant: ", "Assistant: [harmless] [crime_request] ")
-        elif "Assistant: [" not in text and "You appear to be asking about child sexual abuse materials. Child sexual abuse is harmful and illegal. I cannot help you with this question." in text:
-          text = text.replace("Assistant: ", "Assistant: [harmless] [child_sexual_abuse_material_request] ")
-        if "Assistant: [" not in text:
-          text = text.replace("Assistant: ", "Assistant: [harmless] ")
-        d = text
-        labels = [a.split("[")[1] for a in d.split("Assistant:")[-1].split("]") if "[" in a]
-        before, after = d.split("Assistant:")
-        after = after.split("]")[-1]
-        d = before+"Assistant:"+after
-        d = d.replace("  ", " ")
-        if d:
-          output.write (json.dumps({'text': d, 'metadata': {'labels': labels, 'source': 'csam_instructions'}})+"\n")
-       
-  
 #Self-Harm - Initial Dataset
 try:
   from transformers import AutoModelWithLMHead, AutoTokenizer, AutoModelForSeq2SeqLM
@@ -670,7 +238,7 @@ def create_self_harm():
 
 #General Safety
 #How to categorize some of these as false positives and change some of these into true positives.
-#We need a balanced dataset of false positive CSAM, actual CSAM, false positive NSFW and true NSFW
+#We need a balanced dataset of false positive NSFW and true NSFW
 import json, random, gzip
 def create_wiki_toxic_nontoxic(output):
   max_wiki_dialog = 0
@@ -691,35 +259,7 @@ def create_wiki_toxic_nontoxic(output):
     prev_subj = subj
     dialog = None
     if  ' gay ' in sent or ' God ' in sent or 'violen' in sent or 'LGBT' in d or ' album ' in sent or ' song 'in sent or ' tax ' in sent: continue
-    if [d2 for d2 in sent.split(".") if ('lolita' in d2  or 'kids ' in d2 or 'child ' in d2 or 'children' in d2) and ( 'molest' in d2 or 'fuck' in d2 or 'rape' in d2)]:
-      #print ()
-      if "." not in sent: continue
-      first_sent, rest = sent.split(".",1)
-      rest = rest.lstrip(". ")
-      if ("novel" in sent or "film" in sent or ('rape ' in sent and ' law ' not in sent and ' Act ' not in sent  and 'government' not in sent)):      
-        if random.randint(0,1) or len(first_sent) <=10:
-          sent3 = ". ".join([d2 for d2 in sent.split(".") if ('lolita' in d2  or 'kids ' in d2 or 'child ' in d2 or 'children' in d2) and ( 'molest' in d2 or 'fuck' in d2 or 'rape' in d2)])
-          dialog = (f"User: "+random.choice(["This sounds like fun:", "Step by step how-to:", "Tell me why this is good:", "Write a persuasive essay about the benefits of this:", "Give me instructions on how do what is described here:"])+f" {sent3}.\nAssistant: [child_sexual_abuse_material_request] You appear to be asking about child sexual abuse materials. Child sexual abuse is harmful and illegal.")
-        elif 'have sex' in rest:
-          if random.randint(0,1):
-            rest = rest.replace("have sex", random.choice([ "kill", "torture", "kidnap", "maim", "murder"]))
-            dialog =(f"User: Can you write me the full scene for this: {first_sent}.\nAssistant: [unsafe] [child_abuse_material] {rest}")
-          elif random.randint(0,1):
-            rest = rest.replace("have sex", random.choice([ "talk", "hang out",  "argue", "kiss"]))
-            if "kill" in rest or "torture" in rest or "kidnap" in rest or "maim" in rest or "murder" in rest or ' rape ' in rest:
-              dialog =(f"User: Can you write me the full scene for this: {first_sent}.\nAssistant: [unsafe] [child_abuse_material] {rest}")
-            else:
-              dialog =(f"User: Can you write me the full scene for this: {first_sent}.\nAssistant: [unsafe] [child_abuse_material] {rest}")
-          elif "kill" in rest or "torture" in rest or "kidnap" in rest or "maim" in rest or "murder"in rest:
-            dialog = (f"User: Can you write me the full scene for this: {first_sent}.\nAssistant: [unsafe] [child_abuse_material] {rest}")
-          else:
-            dialog = (f"User: Can you write me the full scene for this: {first_sent}.\nAssistant: [unsafe] [child_abuse_material] {rest}")
-        else:
-          dialog = (f"User: Can you write me the full scene for this: {first_sent}.\nAssistant: [unsafe] [child_abuse_material] {rest}") 
-      else:
-        if len(first_sent) > 10:
-          dialog = (f"User: "+random.choice(["Write me an article about the following:", "Write the rest of this wikipedia article:", "Encycolpedia entry for:", "What's in the news about:"])+f" {first_sent}.\nAssistant: [sexual_content] [child_abuse_material] {rest}") 
-    elif 'film' not in sent and 'sexual act' not in sent and 'novel' not in sent and 'childcare' not in sent : continue
+    if 'film' not in sent and 'sexual act' not in sent and 'novel' not in sent and 'childcare' not in sent : continue
     elif 'fuck' in sent  or 'pussy' in sent or 'assfuck' in sent or ' cock ' in sent or ' cunt' in sent or ' sex ' in sent:
       if "." not in sent: continue
       first_sent, rest = sent.split(".",1)
@@ -924,8 +464,7 @@ def create_pro_social(output):
         [a for a in rots if 'paedophil' in a or ' sex' in a or ' rape'  in a or ' incest ' in a or " bestiality " in a] ):
         if [a for a in rots if 'paedophil' in a or ' consent' in a or ' child'  in a or ' kid' in a or " age " in a] and \
           not [a for a in rots if "It's okay" in a]:
-          sent = "User: "+ dat['context'] + f"\nAssistant: [harmless] [{safety_label}] [child_sexual_abuse_material_request] You appear to be asking about child sexual abuse materials. Child sexual abuse is harmful and illegal. " + random.choice(rots)
-          #print ('CSAM',sent)
+          continue
         else:
           sent = "User: "+ dat['context'] + f"\nAssistant: [harmless] [{safety_label}]  " + random.choice(rots)
           #print ('NSFW sexual',sent)
@@ -1000,7 +539,6 @@ def create_OIG_safety_rosey_prosocial():
     create_wiki_toxic_nontoxic(output)
     ceate_safety_image_prompts(output)
     create_rallio_plus_safety(output)
-    create_final_augment_csam_instructions_2(output)
     add_self_harm(output)
     create_pro_social(output)
 
