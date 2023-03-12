@@ -16,3 +16,29 @@ We have also created a small subset of safety data to tag instructions for moder
 
 * OIG_safety_v0.1.jsonl (66K)
 * OIG_safety_v0.2.jsonl (134K)
+
+## Related Projects
+* Check out LAION's [Open Assistant Project](https://github.com/LAION-AI/Open-Assistant). We aim to build a chatbot based on RLHF and human feedback data.
+* Check out our friends Together.xyz's [OpenChatKit](https://github.com/togethercomputer/OpenChatKit). The trained a bot based on OIG.
+
+## Models
+The community has trained several models based on a subset of the OIG datasets including:
+
+- Rallio67/joi2_(20,12,7)B_instruct_alpha
+- Rallio67/chip2_(20,12,7)B_instruct_alpha
+- Rallio67/joi_(20,12,7)B_instruct_alpha
+- Rallio67/chip_(20,12,7)B_instruct_alpha
+- togethercomputer/GPT-NeoXT-Chat-Base-20B
+
+### Safety models
+
+- SummerSigh/T5-Base-Rule-Of-Thumb
+- SummerSigh/Safety-Policy
+- SummerSigh/BART-Base-Rule-Of-Thumb
+- shahules786/prosocial-classifier
+- shahules786/Safetybot-mt5-base
+- shahules786/Safetybot-T5-base
+
+Available on huggingface.co. 
+
+togethercomputer/GPT-JT-Moderation-6B
