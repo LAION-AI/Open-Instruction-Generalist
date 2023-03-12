@@ -19,7 +19,7 @@ We have also created a small subset of safety data to tag instructions for moder
 
 ## Related Projects
 * Check out LAION's [Open Assistant Project](https://github.com/LAION-AI/Open-Assistant). We aim to build a chatbot based on RLHF and human feedback data.
-* Check out our friends Together.xyz's [OpenChatKit](https://github.com/togethercomputer/OpenChatKit). The trained a bot based on OIG.
+* Check out our friends Together.xyz's [OpenChatKit](https://github.com/togethercomputer/OpenChatKit). They trained a bot based on OIG!
 
 ## Models
 The community has trained several models based on a subset of the OIG datasets including:
