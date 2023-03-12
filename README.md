@@ -38,7 +38,6 @@ The community has trained several models based on a subset of the OIG datasets i
 - shahules786/prosocial-classifier
 - shahules786/Safetybot-mt5-base
 - shahules786/Safetybot-T5-base
+- togethercomputer/GPT-JT-Moderation-6B
 
 Available on huggingface.co. 
-
-togethercomputer/GPT-JT-Moderation-6B
