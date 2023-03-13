@@ -32,12 +32,11 @@ except:
   import nltk
   nltk.download('punkt')
   os.system("pip install datasets  transformers bitsandbytes accelerate sentencepiece")
-  os.system("pip install pip==21.3.1")
-  os.system("pip install spacy==2.1.8")
-  os.system("pip install scispacy==0.2.3")
-  os.system("pip install blackstone==0.1")
-  os.system("pip install https://blackstone-model.s3-eu-west-1.amazonaws.com/en_blackstone_proto-0.0.1.tar.gz")
-  os.system("pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_ner_craft_md-0.2.0.tar.gz")
+  #os.system("pip install spacy==2.1.8")
+  #os.system("pip install scispacy==0.2.3")
+  #os.system("pip install blackstone==0.1")
+  #os.system("pip install https://blackstone-model.s3-eu-west-1.amazonaws.com/en_blackstone_proto-0.0.1.tar.gz")
+  #os.system("pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.0/en_ner_craft_md-0.2.0.tar.gz")
   os.system("python -m spacy download en_core_web_sm")
   
 #RESTART THE RUNTIME
@@ -79,8 +78,9 @@ try:
   if basic_nlp is None: pass
 except:
   basic_nlp = spacy.load('en_core_web_sm')
-  sci = spacy.load("en_ner_craft_md")
-  blackstone = spacy.load("en_blackstone_proto")
+  #something is wrong with pip and spacy such that these two pacakges won't load
+  #sci = spacy.load("en_ner_craft_md")
+  #blackstone = spacy.load("en_blackstone_proto")
   # add the other scispacy ner
 
 import math
