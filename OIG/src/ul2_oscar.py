@@ -1,4 +1,3 @@
-from nltk.inference.discourse import and_
 #@title UL2 and Oscar-registry
 """
 Copyright 2023, LAION contributors, inclduing Ontocord, LLC
