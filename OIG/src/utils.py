@@ -20,6 +20,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License. 
 """
+import locale
+def getpreferredencoding(do_setlocale = True):
+    return "UTF-8"
+locale.getpreferredencoding = getpreferredencoding
 import os
 try:
   import datasets, transformers
@@ -28,6 +32,7 @@ except:
   import nltk
   nltk.download('punkt')
   os.system("pip install datasets  transformers bitsandbytes accelerate sentencepiece")
+  os.system("pip install pip==21.3.1")
   os.system("pip install spacy==2.1.8")
   os.system("pip install scispacy==0.2.3")
   os.system("pip install blackstone==0.1")
