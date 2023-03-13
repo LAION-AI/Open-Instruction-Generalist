@@ -1,3 +1,4 @@
+from nltk.inference.discourse import and_
 #@title UL2 and Oscar-registry
 """
 Copyright 2023, LAION contributors, inclduing Ontocord, LLC
@@ -36,13 +37,82 @@ import re, random
 import itertools
 
 from basic_augment import *
+
+def cleanup_text(text, lang="en"):
+  text = text.strip().replace("..", ".").replace(".-", ".").replace("... ...","...").replace("... ...","...").replace("... ...","...").replace("..", ".").replace("--", "-").replace("--", "-").replace("...", "-").replace("[", "(").replace("]", ")")
+  text_lower = text.lower()
+  if ('viagra' in text_lower and text_lower.count("viagra") > 2) or \
+  ('cialis' in text_lower and text_lower.count("cialis") > 2) or \
+  (' hack ' in text_lower and text_lower.count(" hack ") > 2):return "","", ""
+  if (" xxx " in text_lower or " sex " in text_lower or " fuck " in text_lower or " porn " in text_lower) and \
+  (" video " in text_lower or " pics " in text_lower or " pictures " in text_lower or \
+  " horney " in text_lower or " dildo " in text_lower or " anal " in text_lower or " dating " in text_lower or " cock " in text_lower or \
+   " pussy " in text or " whore" in text_lower or " cunt" in text_lower) and random.randint(0,4) > 0: return "", "", ""
+  if "{" in text and "}" in text: return "", "", ""
+  menu= ""
+  footer = ""
+  text = text.replace("A B C D E F G H I J K L M N O P Q R S T U V W X Y Z", "").replace("0 1 2 3 4 5 6 7 8 9","")
+  text = text.replace("’", "'").replace("[…]", "...").replace("\t", " ").replace("…", " ... ")
+  text = " "+text
+  if " 1. "  in text and " 2. " in text:
+    text = text.replace(" 1. ", "\n1. ").\
+    replace(" 2. ", "\n2. ").\
+    replace(" 3. ", "\n3. ").\
+    replace(" 4. ", "\n4. ").\
+    replace(" 5. ", "\n5. ").\
+    replace(" 6. ", "\n6. ").\
+    replace(" 7. ", "\n7. ").\
+    replace(" 8. ", "\n8. ").\
+    replace(" 9. ", "\n9. ").\
+    replace(" 10. ", "\n10. ").\
+    replace(" 11. ", "\n11. ").\
+    replace(" 12. ", "\n12. ").\
+    replace(" 13. ", "\n13. ").\
+    replace(" 14. ", "\n14. ").\
+    replace(" 15. ", "\n15. ").\
+    replace(" 16. ", "\n16. ").\
+    replace(" 17. ", "\n17. ").\
+    replace(" 18. ", "\n18. ").\
+    replace(" 19. ", "\n19. ").\
+    replace(" 20. ", "\n20. ").\
+    strip()
+  text = text.replace("｜", " | ").replace("||", " | ").replace(".", ". ").replace("!", "! ").replace("?", "? ").\
+    replace("a. m.", "a.m.").replace("p. m.", "p.m.").replace("U. S.", "U.S.").replace(". com", ".com").replace(". edu", ".edu").replace(". org", ".org").replace(". gov", ".gov").\
+    replace(". 0", ".0").replace(". 1", ".1").replace(". 2", ".2").replace(". 3", ".3").replace(". 4", ".4").replace(". 5", ".5").replace(". 6", ".6").replace(". 7", ".7").replace(". 8", ".8").replace(". 9", ".9").\
+    replace(". ”. ", ".” ").replace(". \". ", ".\" ").replace(".\".", ".\"").replace(". ”", ".”").replace("[", " [").replace("]", "] ").replace(" -- ", "\n-- ").\
+    replace("  "," ").replace(". . .", "...").\
+    replace("* ", "* ").replace("• ", "\n• ").\
+    replace(". -", ".\n -").\
+    replace("? -", "?\n -").strip()
+  if "|" in text[:50]:
+    text_arr = text.split("|")
+    if lang in ("zh", "th", "ko", "ja", "bo"):
+      text = " ".join(text_arr[-1][3:])
+      text_arr[-1] = " ".join(text_arr[-1][:3])
+    else:
+      text = " ".join(text_arr[-1].split()[3:])
+      text_arr[-1] = " ".join(text_arr[-1].split()[:3])
+    menu = " | ".join(text_arr)
+    
+  if "|" in text[-50:]:
+    text_arr = text.split("|")
+    if lang in ("zh", "th", "ko", "ja", "bo"):
+      text = " ".join(text_arr[0][:-3])
+      text_arr[0] = " ".join(text_arr[0][-3:])
+    else:
+      text = " ".join(text_arr[0].split()[:-3])
+      text_arr[0] = " ".join(text_arr[0].split()[-3:])      
+    footer = " | ".join(text_arr)
+  return text, menu, footer
+
 def create_ul2_plus_instructions(text,  lang="en", min_encoder_word_span = 5, labels=None):
   """
   Sample from some multilingual data to create UL2 data in the form of instructions
   """
   (subject, a_type, style, num_sent) = get_metadata(text, labels)
   encoder_batch, decoder_batch = [], []
-  text = text.strip().replace("..", ".").replace(".-", ".").replace("... ...","...").replace("... ...","...").replace("... ...","...").replace("..", ".").replace("--", "-").replace("--", "-").replace("...", "-").replace("[", "(").replace("]", ")")
+  
+  text, _, _ = cleanup_text(text, lang=lang) 
   paras = []
   chunks = []
   for line in text.split("."):
@@ -58,6 +128,7 @@ def create_ul2_plus_instructions(text,  lang="en", min_encoder_word_span = 5, la
       chunks =[]
     chunks.append(line)
   paras.append(". ".join(chunks))
+  
   paras = [p.replace(".  ", ". ").replace("a. m.", "a.m.").replace("p. m.", "p.m.").replace("U. S.", "U.S.").replace(". com", ".com").replace(". edu", ".edu").replace(". org", ".org").replace(". gov", ".gov").\
         replace(". 0", ".0").replace(". 1", ".1").replace(". 2", ".2").replace(". 3", ".3").replace(". 4", ".4").replace(". 5", ".5").replace(". 6", ".6").replace(". 7", ".7").replace(". 8", ".8").replace(". 9", ".9").\
         replace(". ”. ", ".” ").replace(". \". ", ".\" ").replace(".\".", ".\"").replace(". ”", ".”").strip() 
@@ -82,15 +153,15 @@ def create_ul2_plus_instructions(text,  lang="en", min_encoder_word_span = 5, la
       paras = paras[:-1]
 
   for line in paras:   
-    #print ('*', line) 
     line = line.lstrip(" .,").replace(".”.", ".”").replace(".\".", ".\"")   
     use_extra_id = random.randint(0,3) > 0
     denoising_type = R_DENOISING
     extra_id = 0
     if lang in ("zh", "th", "ko", "ja", "bo"):
-      line = line.split("་")
+      line = list(line)
     else:
       line = line.split()
+    
     encoder_line = []
     decoder_line = []
     prev_has_id = False
@@ -161,39 +232,40 @@ def create_ul2_plus_instructions(text,  lang="en", min_encoder_word_span = 5, la
       last_encoder_span = 0
       while line:
         word = line[0]
-        if last_encoder_span > min_encoder_word_span and extra_id < 99 and not prev_has_id:
-          if (denoising_type == R_DENOISING  and random.randint(0, 10) in (0, 1)) or \
-            (denoising_type ==  X1_DENOISING and random.randint(0,2) == 0) or\
-            (denoising_type == X2_DENOISING and  random.randint(0,10) == 0): 
-            if lang in ("zh", "th", "ko", "ja"):
-              l = min(len(line), random.choice((1, 2, 3, 5, 10)))# this is number of words, and not tokens. original t5 paper did, 2, 3, 5, and 10 tokens.
-            else:
-              if denoising_type ==  X2_DENOISING:
-                l = min(len(line), random.choice((12, 24, 24, 32, 32, 64)))
+        if word.strip():
+          if last_encoder_span > min_encoder_word_span and extra_id < 99 and not prev_has_id:
+            if (denoising_type == R_DENOISING  and random.randint(0, 10) in (0, 1)) or \
+              (denoising_type ==  X1_DENOISING and random.randint(0,2) == 0) or\
+              (denoising_type == X2_DENOISING and  random.randint(0,10) == 0): 
+              if lang in ("zh", "th", "ko", "ja"):
+                l = min(len(line), random.choice((1, 2, 3, 5, 10)))# this is number of words, and not tokens. original t5 paper did, 2, 3, 5, and 10 tokens.
               else:
-                l = min(len(line), random.choice((1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 8)))
-            eos = [idx for idx, w in enumerate(line[:l]) if w[-1]=="."]
-            if eos:
-              l = eos[0]
-            if line[:l]:
-              extra_id+=1
-              if not use_extra_id:
-                encoder_line.append(f" ... ")
-              else:
-                if denoising_type in (X1_DENOISING, R_DENOISING):
-                  encoder_line.append(f" [words {extra_id}] ")
+                if denoising_type ==  X2_DENOISING:
+                  l = min(len(line), random.choice((12, 24, 24, 32, 32, 64)))
                 else:
-                  encoder_line.append(f" [spans {extra_id}] ")
-              if denoising_type in (X1_DENOISING, R_DENOISING):
-                decoder_line.append(f"\nwords {extra_id}: ")
-              elif denoising_type == X2_DENOISING:
-                decoder_line.append(f"\nspans {extra_id}: ")    
-            
-              decoder_line.extend(line[:l])
-              line = line[l:]
-              prev_has_id = True
-              last_encoder_span = 0
-              continue
+                  l = min(len(line), random.choice((1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 8)))
+              eos = [idx for idx, w in enumerate(line[:l]) if w[-1]=="."]
+              if eos:
+                l = eos[0]
+              if line[:l]:
+                extra_id+=1
+                if not use_extra_id:
+                  encoder_line.append(f" ... ")
+                else:
+                  if denoising_type in (X1_DENOISING, R_DENOISING):
+                    encoder_line.append(f" [words {extra_id}] ")
+                  else:
+                    encoder_line.append(f" [spans {extra_id}] ")
+                if denoising_type in (X1_DENOISING, R_DENOISING):
+                  decoder_line.append(f"\nwords {extra_id}: ")
+                elif denoising_type == X2_DENOISING:
+                  decoder_line.append(f"\nspans {extra_id}: ")    
+              
+                decoder_line.extend(line[:l])
+                line = line[l:]
+                prev_has_id = True
+                last_encoder_span = 0
+                continue
         encoder_line.append(word)
         line = line[1:]
         prev_has_id = False
@@ -240,7 +312,7 @@ def create_ul2_plus_instructions(text,  lang="en", min_encoder_word_span = 5, la
         dialog += f"\nUser: For this above text, what type of writing is this?\nAssistant: Most likley {a_type}."
       else:
         dialog += f"\nUser: Can you tell me the writing style we were using?\nAssistant: {style} style."
-  dialog = dialog.strip()
+  dialog = dialog.replace("\n\n", "\n").strip("\n\r ")
 
   choice = random.randint(0,5)
   if choice == 0:
@@ -291,7 +363,7 @@ def create_ul2_plus_instructions(text,  lang="en", min_encoder_word_span = 5, la
     dialog = dialog.replace(": Can you tell me ", ": ")     
   elif choice == 5:
     dialog = dialog.replace(": What ", ": ")    
-  return dialog
+  return dialog.replace("\n\n", "\n").strip("\n\r ")
 
 def create_prompt(text, labels):
   (subject, a_type, style, num_sent) = get_metadata(text, labels)
@@ -351,7 +423,7 @@ def create_prompt(text, labels):
   return prompts
   
 
-def do_oscar_registry(shard_name, do_ul2=False):
+def do_oscar_registry(shard_name, lang="en", do_ul2=False):
   output_file = f"ul2_plus_oscar_{shard_name}.jsonl" if do_ul2 else f"oscar_{shard_name}.jsonl"
   if os.path.exists(f"/content/drive/Shareddrives/LAION/{output_file}.gz"):
     print (f"{output_file} already exists")
@@ -369,58 +441,7 @@ def do_oscar_registry(shard_name, do_ul2=False):
       labels, text = data['labels'], data['text']
       if len(labels) == 1 and 'IN' in labels and random.randint(0,5) > 0: 
         continue
-      text_lower = text.lower()
-      if 'viagra' in text_lower or 'cialis' in text_lower or " hack " in text_lower: continue
-      if " a " not in text_lower and " the " not in text_lower and " of " not in text_lower and " and " not in text_lower: continue
-      if (" xxx " in text_lower or " sex " in text_lower or " fuck " in text_lower or " porn " in text_lower) and (" video " in text_lower or " pics " in text_lower or " pictures " in text_lower or " horney " in text_lower or " dildo " in text_lower or " anal " in text_lower or " dating " in text_lower or " cock " in text_lower or " pussy " in text or " whore" in text_lower or " cunt" in text_lower) and random.randint(0,4) > 0: continue
-      if "{" in text or "}" in text: continue
-      menu= ""
-      footer = ""
-      if not labels or len(text) < 50: continue
-      text = text.replace("A B C D E F G H I J K L M N O P Q R S T U V W X Y Z", "").replace("0 1 2 3 4 5 6 7 8 9","")
-      text = text.replace("’", "'").replace("[…]", "...").replace("\t", " ").replace("…", " ... ")
-      text = " "+text
-      if " 1. "  in text and " 2. " in text:
-        text = text.replace(" 1. ", "\n1. ").\
-        replace(" 2. ", "\n2. ").\
-        replace(" 3. ", "\n3. ").\
-        replace(" 4. ", "\n4. ").\
-        replace(" 5. ", "\n5. ").\
-        replace(" 6. ", "\n6. ").\
-        replace(" 7. ", "\n7. ").\
-        replace(" 8. ", "\n8. ").\
-        replace(" 9. ", "\n9. ").\
-        replace(" 10. ", "\n10. ").\
-        replace(" 11. ", "\n11. ").\
-        replace(" 12. ", "\n12. ").\
-        replace(" 13. ", "\n13. ").\
-        replace(" 14. ", "\n14. ").\
-        replace(" 15. ", "\n15. ").\
-        replace(" 16. ", "\n16. ").\
-        replace(" 17. ", "\n17. ").\
-        replace(" 18. ", "\n18. ").\
-        replace(" 19. ", "\n19. ").\
-        replace(" 20. ", "\n20. ").\
-        strip()
-      text = text.replace("｜", " | ").replace("||", " | ").replace(".", ". ").replace("!", "! ").replace("?", "? ").\
-        replace("a. m.", "a.m.").replace("p. m.", "p.m.").replace("U. S.", "U.S.").replace(". com", ".com").replace(". edu", ".edu").replace(". org", ".org").replace(". gov", ".gov").\
-        replace(". 0", ".0").replace(". 1", ".1").replace(". 2", ".2").replace(". 3", ".3").replace(". 4", ".4").replace(". 5", ".5").replace(". 6", ".6").replace(". 7", ".7").replace(". 8", ".8").replace(". 9", ".9").\
-        replace(". ”. ", ".” ").replace(". \". ", ".\" ").replace(".\".", ".\"").replace(". ”", ".”").replace("[", " [").replace("]", "] ").replace(" -- ", "\n-- ").\
-        replace("  "," ").replace(". . .", "...").\
-        replace("* ", "* ").replace("• ", "\n• ").\
-        replace(". -", ".\n -").\
-        replace("? -", "?\n -").strip()
-      if "|" in text[:50]:
-        text_arr = text.split("|")
-        text = " ".join(text_arr[-1].split()[3:])
-        text_arr[-1] = " ".join(text_arr[-1].split()[:3])
-        menu = " | ".join(text_arr)
-        
-      if "|" in text[-50:]:
-        text_arr = text.split("|")
-        text = " ".join(text_arr[0].split()[:-3])
-        text_arr[0] = " ".join(text_arr[0].split()[-3:])
-        footer = " | ".join(text_arr)
+      text, menu,footer = cleanup_text(text, lang=lang)
       sents = []  
       if "Disclaimer" in text[:100] or "this site" in text[:100]:
         #print ('has disclaimer', text)
@@ -559,3 +580,14 @@ def multiprocess_oscar(docs_start=0, docs_end=99999, do_ul2=False):
   return results
 
 #multiprocess_oscar(300, 325, do_ul2=True)
+
+
+import gzip, glob
+with open("/content/sungai_ul2_instructions.jsonl", "w") as output:
+  for file in glob.glob("/content/sungai/mdd/*.txt.gz"):
+    with gzip.open(file) as input:
+      lang = file.split("/")[-1].split(".")[0].replace("_mdd", "")
+      for l in input:
+        l = l.decode()
+        out = create_ul2_plus_instructions(l, lang="zh")
+        output.write(json.dumps({'text': out, 'metadata': {'source': "sungai_ul2_"+lang}})+"\n")
