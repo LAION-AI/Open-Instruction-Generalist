@@ -582,11 +582,12 @@ def multiprocess_oscar(docs_start=0, docs_end=99999, do_ul2=False):
 
 
 import gzip, glob
-with open("/content/sungai_ul2_instructions.jsonl", "w") as output:
-  for file in glob.glob("/content/sungai/mdd/*.txt.gz"):
-    with gzip.open(file) as input:
-      lang = file.split("/")[-1].split(".")[0].replace("_mdd", "")
-      for l in input:
-        l = l.decode()
-        out = create_ul2_plus_instructions(l, lang="zh")
-        output.write(json.dumps({'text': out, 'metadata': {'source': "sungai_ul2_"+lang}})+"\n")
+if False:
+  with open("/content/sungai_ul2_instructions.jsonl", "w") as output:
+    for file in glob.glob("/content/sungai/mdd/*.txt.gz"):
+      with gzip.open(file) as input:
+        lang = file.split("/")[-1].split(".")[0].replace("_mdd", "")
+        for l in input:
+          l = l.decode()
+          out = create_ul2_plus_instructions(l, lang=lang)
+          output.write(json.dumps({'text': out, 'metadata': {'source': "sungai_ul2_"+lang}})+"\n")
