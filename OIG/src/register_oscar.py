@@ -68,28 +68,6 @@ def mask_paragraph(sentence):
     return ' '.join(words),missing
 
 
-w_styles = {'NA':'Narrative',
- 'IN': 'Informational Description',
- 'OP':'Opinion',
- 'ID':'Interactive Discussion',
- 'HI':'Instruction',
- 'IP':'Informational Persuasion',
- 'LY':'Lyrical',
- 'SP':'Spoken',}
-
-
-
-instructions = {'free_style':['Write {n} sentences about {topic} in {style_name} style.',
-                             'Write a paragraph about {topic} in {style_name} style.'],
-                'fill_word':['Fill in the missing words in the following paragraph: {sent}'],
-                'fill_sent':['Fill in the missing sentences knowing that the pargraph follow {style_name} style about {topic}: {sent}',
-                            'In {article} {style_name} paragraph about {topic}. What sentence is missing? Please provide the missing sentence following the same strcture: {sent}'],
-               'fill_parh':['Fill in the missing paragraph with {n} senteces in the style of {style_name} about {topic}']}
-
-stopwords = ['i', 'you', 'thy', 'he', 'she', 'it', 'one', 'we', 'you', 'who', 'what', 'well','the', 'is','are', 'while','what','when','their'
-          ,'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-           'this','is']
-
 
 w_styles = {'NA':'Narrative',
  'IN': 'Informational Description',
@@ -109,55 +87,8 @@ instructions = {'free_style':['Write {n} sentences about {topic} in {style_name}
                             'In {article} {style_name} paragraph about {topic}. What sentence is missing? Please provide the missing sentence following the same strcture: {sent}'],
                'fill_parh':['Fill in the missing paragraph with {n} senteces in the style of {style_name} about {topic}']}
 
-stopwords = ['i', 'you', 'thy', 'he', 'she', 'it', 'one', 'we', 'you', 'who', 'what', 'well','the', 'is','are', 'while','what','when','their'
-          ,'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-           'this','is']
-
-
-w_styles = {'NA':'Narrative',
- 'IN': 'Informational Description',
- 'OP':'Opinion',
- 'ID':'Interactive Discussion',
- 'HI':'Instruction',
- 'IP':'Informational Persuasion',
- 'LY':'Lyrical',
- 'SP':'Spoken',}
-
-
-
-instructions = {'free_style':['Write {n} sentences about {topic} in {style_name} style.',
-                             'Write a paragraph about {topic} in {style_name} style.'],
-                'fill_word':['Fill in the missing words in the following paragraph: {sent}'],
-                'fill_sent':['Fill in the missing sentences knowing that the pargraph follow {style_name} style about {topic}: {sent}',
-                            'In {article} {style_name} paragraph about {topic}. What sentence is missing? Please provide the missing sentence following the same strcture: {sent}'],
-               'fill_parh':['Fill in the missing paragraph with {n} senteces in the style of {style_name} about {topic}']}
-
-stopwords = ['i', 'you', 'thy', 'he', 'she', 'it', 'one', 'we', 'you', 'who', 'what', 'well','the', 'is','are', 'while','what','when','their'
-          ,'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-           'this','is']
-
-
-w_styles = {'NA':'Narrative',
- 'IN': 'Informational Description',
- 'OP':'Opinion',
- 'ID':'Interactive Discussion',
- 'HI':'Instruction',
- 'IP':'Informational Persuasion',
- 'LY':'Lyrical',
- 'SP':'Spoken',}
-
-
-
-instructions = {'free_style':['Write {n} sentences about {topic} in {style_name} style.',
-                             'Write a paragraph about {topic} in {style_name} style.'],
-                'fill_word':['Fill in the missing words in the following paragraph: {sent}'],
-                'fill_sent':['Fill in the missing sentences knowing that the pargraph follow {style_name} style about {topic}: {sent}',
-                            'In {article} {style_name} paragraph about {topic}. What sentence is missing? Please provide the missing sentence following the same strcture: {sent}'],
-               'fill_parh':['Fill in the missing paragraph with {n} senteces in the style of {style_name} about {topic}']}
-
-stopwords = ['i', 'you', 'thy', 'he', 'she', 'it', 'one', 'we', 'you', 'who', 'what', 'well','the', 'is','are', 'while','what','when','their'
-          ,'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-           'this','is']
+stopwords = ['i', 'you', 'thy', 'he', 'she', 'it', 'one', 'we', 'you', 'who', 'what', 'well','the', 'is','are', 'while','what','when','their','this',
+          'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',]
 
 
 def generate_inst(ex):
