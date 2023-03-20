@@ -111,7 +111,6 @@ def generate_inst(ex):
         if captialized_words == None:
 
             captialized_words = re.search(r'\b[a-z]\w*( [a-z]\w*)*\b', ex['text'][index:])
-            non_english = is_non_english(ex['text'])
 
             if captialized_words == None:
                 ex['prompt'] = ''
