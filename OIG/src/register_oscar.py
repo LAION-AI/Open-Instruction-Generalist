@@ -7,7 +7,7 @@ def mask_words(sentence, prob_mask=0.1):
     """Randomly replace words in a sentence based on
     a given probability.
     args:
-        sentence (str): The sentence to be replace with ...
+        sentence (str): The word to be replace with ...
         prob_mask (float): The probability of a word being masked.
     Returns:
         str: The sentence with the masked words.
@@ -35,7 +35,16 @@ def mask_words(sentence, prob_mask=0.1):
 
 def mask_sentence(sentence, prob_mask=0.1):
     """
+    Masks a random sentences in a given string with prob.
+
+    Args:
+    - sentence (str): The sentence to be replace with .... .
+    - prob_mask (float): The probability of a sentence being masked, default is 0.1.
+
+    Returns:
+    - A pargraph with a masked sentence.
     """
+    
     words = sentence.split('.')
     n = round(len(words) * prob_mask)
     masked_sen = []
@@ -57,6 +66,13 @@ def mask_sentence(sentence, prob_mask=0.1):
 
 def mask_paragraph(sentence):
     """
+    Masks a paragraph.
+    
+    Args:
+    - sentence (str): The paragraph to be masked.
+    
+    Returns:
+    - A string of the masked paragraph.
     """
     words = sentence.split('\n')[:-1]
 
@@ -147,7 +163,7 @@ def generate_inst(ex):
         ex['prompt'] = f'Write {num_sent} sentences about {topic}.'
     return ex
 
-ds = load_dataset('TurkuNLP/register_oscar','en',cache_dir='/media/khalid/data_disk/cache_dataset/TurkuNLP/')
+ds = load_dataset('TurkuNLP/register_oscar','en',cache_dir='/home/cache/TurkuNLP/')
 ds = ds.map(generate_inst)
 ds.to_json('oscar.json',
           orient = 'records',
