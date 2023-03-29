@@ -13,7 +13,7 @@ def mask_words(sentence, prob_mask=0.1):
         str: The sentence with the masked words.
     """
     words = sentence.split(' ')
-    n = n = round(len(words) * prob_mask)
+    n = round(len(words) * prob_mask)
     maskedw = ['The missing words:']
     for i in random.sample(range(len(words)), n):
         maskedw.append(f'{words[i]},')
@@ -37,7 +37,7 @@ def mask_sentence(sentence, prob_mask=0.1):
     """
     """
     words = sentence.split('.')
-    n = n = round(len(words) * prob_mask)
+    n = round(len(words) * prob_mask)
     masked_sen = []
     for i in random.sample(range(len(words)), n):
         masked_sen.append(words[i])
@@ -59,13 +59,12 @@ def mask_paragraph(sentence):
     """
     """
     words = sentence.split('\n')[:-1]
-    n = n = round(len(words) * prob_mask)
 
     i = random.sample(range(len(words)),1)[0]
     missing = words[i]
     words[i] = '...'
 
-    return ' '.join(words),missing
+    return ' '.join(words)
 
 
 
