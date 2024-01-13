@@ -8,7 +8,6 @@ We will create ever larger instruction datasets with the goal to generate eventu
 
 * OIG-small-chip2 (200K) - Done and released. See  small_instruction_set sub-directory.
 * OIG-40M - Done - Done and released. See 40M sub-directory
-* OIG-100M - In progress, to be released expected April 30, 2023
 
 # OIG-Moderation
 
